@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sokoban Puzzle Solver</title>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.18.1/full/pyodide.js"></script>
+    <title>Sokoban Solver con Pyodide</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js"></script>
+    <script src="js/app.js"></script>
 </head>
 <body>
-    <h1>Sokoban Puzzle Solver</h1>
-    <!-- Aquí puedes agregar más estructura de página y elementos UI según necesites -->
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <h1>Sokoban Solver con Pyodide</h1>
+    <button id="run-btn">Run Python Script</button>
+    <div id="output">Output will be displayed here</div>
 </body>
 </html>

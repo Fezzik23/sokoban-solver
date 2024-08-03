@@ -169,34 +169,36 @@ class PuzzleSolver:
         # Aquí implementarías el algoritmo A*
         pass
 
-# Ejemplo de uso:
-    
-easy1 = [
-"#####",
-"#.  #",
-"# B #",
-"#  &#",
-"#####"
-]
-blocked= [
-"#####",
-"#.  #",
-"#   #",
-"#B &#",
-"#####"
-]
-layout1 = [
- "#######",
-"##&##..#",
-"# BB B.#",
-"#   B  #",
-"####  .#",
-"#####"
-]
+
 
 # Solución utilizando BFS
-for row in easy1:
-    print(row)
-solver_bfs = PuzzleSolver(easy1, method='bfs')
-solution_bfs, time_taken_bfs = solver_bfs.solve()
-print(f"BFS: {solution_bfs}, {time_taken_bfs}")
+def test():
+    # Ejemplo de uso:
+    
+    easy1 = [
+    "#####",
+    "#.  #",
+    "# B #",
+    "#  &#",
+    "#####"
+    ]
+    blocked= [
+    "#####",
+    "#.  #",
+    "#   #",
+    "#B &#",
+    "#####"
+    ]
+    layout1 = [
+    "#######",
+    "##&##..#",
+    "# BB B.#",
+    "#   B  #",
+    "####  .#",
+    "#####"
+    ]
+    for row in easy1:
+        print(row)
+    solver_bfs = PuzzleSolver(easy1, method='bfs')
+    solution_bfs, time_taken_bfs = solver_bfs.solve()
+    print(f"BFS: {solution_bfs}, {time_taken_bfs}")
