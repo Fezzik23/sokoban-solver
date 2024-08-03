@@ -202,3 +202,4 @@ def test():
     solver_bfs = PuzzleSolver(easy1, method='bfs')
     solution_bfs, time_taken_bfs = solver_bfs.solve()
     print(f"BFS: {solution_bfs}, {time_taken_bfs}")
+    return solution_bfs

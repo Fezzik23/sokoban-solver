@@ -1,6 +1,6 @@
 async function loadPyodideAndRunScript() {
     let pyodide = await loadPyodide({
-        indexURL : "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/"
+        indexURL : "/pyodide/"  // Asegúrate de actualizar esta URL según la ubicación local de Pyodide
     });
     await pyodide.loadPackage('numpy');
     runPythonScript(pyodide);
@@ -8,7 +8,7 @@ async function loadPyodideAndRunScript() {
 
 async function runPythonScript(pyodide) {
     try {
-        const response = await fetch('static/main.py');
+        const response = await fetch('/static/main.py');  // Asegúrate de que la ruta es correcta
         const pythonScript = await response.text();
         await pyodide.runPythonAsync(pythonScript);
         let output = await pyodide.runPythonAsync('test()');
