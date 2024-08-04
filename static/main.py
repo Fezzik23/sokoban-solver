@@ -171,6 +171,11 @@ class PuzzleSolver:
 
 
 
+def solve_puzzle_bfs(puzzle):
+    solver_bfs = PuzzleSolver(puzzle, method='bfs')
+    solution_bfs, time_taken_bfs = solver_bfs.solve()
+    return solution_bfs
+
 # Solución utilizando BFS
 def test():
     # Ejemplo de uso:
@@ -182,6 +187,19 @@ def test():
     "#  &#",
     "#####"
     ]
+    easy2 = [
+    "###",
+    "# #",
+    "###"
+    ]
+    easy3 = [
+    "###",
+    "#.#",
+    "#B#",
+    "#&#",
+    "###"
+    ]
+
     blocked= [
     "#####",
     "#.  #",
@@ -199,7 +217,9 @@ def test():
     ]
     for row in easy1:
         print(row)
-    solver_bfs = PuzzleSolver(easy1, method='bfs')
+    solver_bfs = PuzzleSolver(easy3, method='bfs')
     solution_bfs, time_taken_bfs = solver_bfs.solve()
     print(f"BFS: {solution_bfs}, {time_taken_bfs}")
     return solution_bfs
+
+#test()
