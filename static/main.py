@@ -20,7 +20,7 @@ class PuzzleSolver:
     def is_legal_action(self, action, pos_player, pos_box):
         """Verifica si la acción dada es legal."""
         x_player, y_player = pos_player
-        if action[-1].isupper():  # El movimiento fue un empuje
+        if action[-1].isupper():  #@ El movimiento fue un empuje
             x1, y1 = x_player + 2 * action[0], y_player + 2 * action[1]
         else:
             x1, y1 = x_player + action[0], y_player + action[1]
@@ -36,13 +36,13 @@ class PuzzleSolver:
         legal_actions = []
         for action in all_actions:
             x1, y1 = pos_player[0] + action[0], pos_player[1] + action[1]
-            if (x1, y1) in pos_box:  # El movimiento fue un empuje
-                action.pop(2)  # Elimina la letra minúscula
+            if (x1, y1) in pos_box:  #@ El movimiento fue un empuje
+                action.pop(2)  #@ Elimina la letra minúscula
             else:
-                action.pop(3)  # Elimina la letra mayúscula
+                action.pop(3)  #@ Elimina la letra mayúscula
             if self.is_legal_action(action, pos_player, pos_box):
                 legal_actions.append(action)
-        return tuple(tuple(x) for x in legal_actions) # e.g. ((0, -1, 'l'), (0, 1, 'R')) (izquierda sin empujar caja y derecha sin empujar caja)
+        return tuple(tuple(x) for x in legal_actions) #@ e.g. ((0, -1, 'l'), (0, 1, 'R')) (izquierda sin empujar caja y derecha sin empujar caja)
 
     def is_end_state(self, pos_box):
         """Verifica si todos los objetivos han sido alcanzados por las cajas."""
@@ -61,7 +61,7 @@ class PuzzleSolver:
                           [0,1,2,3,4,5,6,7,8][::-1], #@ Original invertido (rot 180 grados)
                           [2,5,8,1,4,7,0,3,6], #@ Rotacion sentido antihorario.
                           [2,5,8,1,4,7,0,3,6][::-1]] #@ 
-        flip_pattern = [[2,1,0,5,4,3,8,7,6], #@ Estas son inversiones
+        flip_pattern = [[2,1,0,5,4,3,8,7,6], #@ Estas son las inversiones
                         [0,3,6,1,4,7,2,5,8],
                         [2,1,0,5,4,3,8,7,6][::-1],
                         [0,3,6,1,4,7,2,5,8][::-1]]
@@ -88,7 +88,7 @@ class PuzzleSolver:
     def update_state(self, pos_player, pos_box, action):
         """Devuelve el estado de juego actualizado después de realizar una acción."""
         x_player, y_player = pos_player # the previous position of player
-        new_pos_player = [x_player + action[0], y_player + action[1]] # the current position of player
+        new_pos_player = [x_player + action[0], y_player + action[1]] #@ Posicion actual del jugador
         pos_box = [list(x) for x in pos_box]
         if action[-1].isupper(): # if pushing, update the position of box
             pos_box.remove(new_pos_player)
@@ -104,7 +104,7 @@ class PuzzleSolver:
         max_cols_num = max([len(x) for x in layout])
         for i_row in range(len(layout)):
             for i_col in range(len(layout[i_row])):
-                if layout[i_row][i_col] == ' ': layout[i_row][i_col] = 0   # free space
+                if layout[i_row][i_col]   == ' ': layout[i_row][i_col] = 0   # free space
                 elif layout[i_row][i_col] == '#': layout[i_row][i_col] = 1 # wall
                 elif layout[i_row][i_col] == '&': layout[i_row][i_col] = 2 # player
                 elif layout[i_row][i_col] == 'B': layout[i_row][i_col] = 3 # box
@@ -125,8 +125,8 @@ class PuzzleSolver:
         beginPlayer = self.pos_of_player(self.game_state)
 
         startState = (beginPlayer, beginBox) # e.g. ((2, 2), ((2, 3), (3, 4), (4, 4), (6, 1), (6, 4), (6, 5)))
-        frontier = collections.deque([[startState]]) # store states
-        actions = collections.deque([[0]]) # store actions
+        frontier = collections.deque([[startState]]) #@ Guardamos estados
+        actions = collections.deque([[0]]) #@ Guardamos acciones
         exploredSet = set()
         count = 0
         while frontier:
@@ -134,8 +134,6 @@ class PuzzleSolver:
             node_action = actions.popleft()
             if self.is_end_state(node[-1][-1]):
                 solution = ','.join(node_action[1:]).replace(',','')
-                print(count)
-                print(frontier)
                 return solution
             if node[-1] not in exploredSet:
                 exploredSet.add(node[-1])
@@ -143,8 +141,8 @@ class PuzzleSolver:
                     count = count + 1
                     new_pos_player, new_pos_box = self.update_state(node[-1][0], node[-1][1], action)
                     if self.is_failed(new_pos_box):
-                        continue #salta al inicio del bucle
-                    frontier.append(node + [(new_pos_player, new_pos_box)]) #Expandimos la frontera de posibles soluciones.
+                        continue #@ salta al inicio del bucle
+                    frontier.append(node + [(new_pos_player, new_pos_box)]) #@ Expandimos la frontera de posibles soluciones.
                     actions.append(node_action + [action[-1]])
 
 
@@ -171,32 +169,37 @@ class PuzzleSolver:
         # Aquí implementarías el algoritmo A*
         pass
 
-# Ejemplo de uso:
-    
-easy1 = [
-"#####",
-"#.  #",
-"# B #",
-"#  &#",
-"#####"
-]
-blocked= [
-"#####",
-"#.  #",
-"#   #",
-"#B &#",
-"#####"
-]
-layout1 = [
- "#######",
-"##&##..#",
-"# BB B.#",
-"#   B  #",
-"####  .#",
-"#####"
-]
+
 
 # Solución utilizando BFS
-solver_bfs = PuzzleSolver(easy1, method='bfs')
-solution_bfs, time_taken_bfs = solver_bfs.solve()
-print(f"BFS: {solution_bfs}, {time_taken_bfs}")
+def test():
+    # Ejemplo de uso:
+    
+    easy1 = [
+    "#####",
+    "#.  #",
+    "# B #",
+    "#  &#",
+    "#####"
+    ]
+    blocked= [
+    "#####",
+    "#.  #",
+    "#   #",
+    "#B &#",
+    "#####"
+    ]
+    layout1 = [
+    "#######",
+    "##&##..#",
+    "# BB B.#",
+    "#   B  #",
+    "####  .#",
+    "#####"
+    ]
+    for row in easy1:
+        print(row)
+    solver_bfs = PuzzleSolver(easy1, method='bfs')
+    solution_bfs, time_taken_bfs = solver_bfs.solve()
+    print(f"BFS: {solution_bfs}, {time_taken_bfs}")
+    return solution_bfs
