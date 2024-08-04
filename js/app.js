@@ -1,9 +1,18 @@
 async function loadPyodideAndRunScript() {
-    let pyodide = await loadPyodide({
-        indexURL : "/pyodide/"  // Asegúrate de actualizar esta URL según la ubicación local de Pyodide
-    });
-    await pyodide.loadPackage('numpy');
-    runPythonScript(pyodide);
+    let pyodide;
+    try {
+        // Descomenta la siguiente línea si estás usando Pyodide localmente
+        //@ pyodide = await loadPyodide({ indexURL : "/pyodide/" });
+        
+        // Comenta la siguiente línea si estás usando Pyodide localmente
+        pyodide = await loadPyodide({ indexURL : "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/" });
+        
+        await pyodide.loadPackage('numpy');
+        runPythonScript(pyodide);
+    } catch (err) {
+        console.error('Error loading Pyodide:', err);
+        document.getElementById('output').innerText = 'Error loading Pyodide: ' + err.message;
+    }
 }
 
 async function runPythonScript(pyodide) {
@@ -14,7 +23,7 @@ async function runPythonScript(pyodide) {
         let output = await pyodide.runPythonAsync('test()');
         document.getElementById('output').innerText = JSON.stringify(output);
     } catch (err) {
-        console.error(err);
+        console.error('Error running Python script:', err);
         document.getElementById('output').innerText = 'Error running Python script: ' + err.message;
     }
 }

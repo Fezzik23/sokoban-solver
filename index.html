@@ -2,12 +2,15 @@
 <html>
 <head>
     <title>Sokoban Solver con Pyodide</title>
-    <script src="/pyodide/pyodide.js"></script> <!-- Si descargaste Pyodide localmente -->
+    <!-- Si descargaste Pyodide localmente, descomenta la siguiente línea y comenta la del CDN -->
+    <!--@ <script src="/pyodide/pyodide.js"></script> -->
+    <!-- CDN version of Pyodide: -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js"></script>
     <script src="/js/app.js"></script>
 </head>
 <body>
     <h1>Sokoban Solver con Pyodide</h1>
-    <textarea rows="5" cols="5">
+    <textarea id="puzzle-input" rows="5" cols="5">
 #####
 #.  #
 # B #
