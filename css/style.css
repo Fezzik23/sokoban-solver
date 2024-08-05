@@ -1,20 +1,23 @@
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(5, 40px);
-    grid-template-rows: repeat(5, 40px);
-    gap: 1px;
+    justify-content: center; /* Centra la cuadrícula horizontalmente */
+    align-items: center; /* Centra la cuadrícula verticalmente */
+    gap: 0px; /* Elimina el espacio entre las celdas */
+    margin: 20px auto; /* Añade margen alrededor de la cuadrícula para mejor visualización */
 }
 
 .grid-item {
-    width: 40px;
-    height: 40px;
-    border: 1px solid #000;
+    width: 40px; /* Ancho de cada celda */
+    height: 40px; /* Altura de cada celda */
+    border: 1px solid #000; /* Borde para cada celda */
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    background-color: #f4f4f4; /* Fondo claro para cada celda, opcional */
 }
 
 .controls {
     margin-top: 10px;
+    text-align: center; /* Centra los controles */
 }

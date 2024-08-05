@@ -10,10 +10,11 @@
 </head>
 <body>
     <h1>Sokoban Solver con Pyodide V2</h1>
-    <div class="grid-container" id="grid">
-        <!-- JavaScript will generate the grid items here -->
-    </div>
     <div class="controls">
+        <label for="grid-size">Grid Size:</label>
+        <select id="grid-size">
+            <!-- Las opciones se añadirán dinámicamente con JavaScript -->
+        </select>
         <label for="element-select">Select Element:</label>
         <select id="element-select">
             <option value=" ">Empty</option>
@@ -23,6 +24,9 @@
             <option value="&">Player</option>
         </select>
         <button id="solve-btn">Solve</button>
+    </div>
+    <div class="grid-container" id="grid">
+        <!-- JavaScript will generate the grid items here -->
     </div>
     <div id="output">Output will be displayed here</div>
 
