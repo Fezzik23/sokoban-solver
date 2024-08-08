@@ -3,6 +3,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const gridSizeSelect = document.getElementById('grid-size');
     const elementSelect = document.getElementById('element-select');
     const output = document.getElementById('output');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    let currentStep = 0;
+    let mapStates = [];  // Aquí almacenaremos los estados del mapa
 
     // Añadir opciones de tamaño de cuadrícula dinámicamente
     for (let i = 5; i <= 20; i++) {
@@ -18,21 +22,61 @@ document.addEventListener('DOMContentLoaded', function () {
     gridSizeSelect.addEventListener('change', () => createGrid(parseInt(gridSizeSelect.value)));
     document.getElementById('solve-btn').addEventListener('click', loadPyodideAndRunScript);
 
+    prevBtn.addEventListener('click', () => {
+        if (currentStep > 0) {
+            currentStep--;
+            drawMap(mapStates[currentStep]);
+        }
+    });
+
+    nextBtn.addEventListener('click', () => {
+        if (currentStep < mapStates.length - 1) {
+            currentStep++;
+            drawMap(mapStates[currentStep]);
+        }
+    });
+
     function createGrid(size) {
         grid.innerHTML = '';
         grid.style.gridTemplateColumns = `repeat(${size}, 40px)`;
         grid.style.gridTemplateRows = `repeat(${size}, 40px)`;
-
+    
         for (let i = 0; i < size * size; i++) {
             const cell = document.createElement('div');
             cell.className = 'grid-item';
-            cell.dataset.value = ' ';
+            cell.textContent = ' ';  // Inicialmente vacío
+            cell.dataset.value = ' ';  // Usamos un espacio para representar vacío
             cell.addEventListener('click', () => {
                 cell.textContent = elementSelect.value;
                 cell.dataset.value = elementSelect.value;
             });
             grid.appendChild(cell);
         }
+    }
+    
+
+    function drawMap(mapState) {
+        const size = parseInt(gridSizeSelect.value);
+        const cells = document.querySelectorAll('.grid-item');
+    
+        if (!mapState || mapState.length === 0 || mapState.length !== size) {
+            console.error('Invalid map state:', mapState);
+            output.textContent = 'Invalid map state received.';
+            return;
+        }
+    
+        cells.forEach((cell, index) => {
+            const x = index % size;
+            const y = Math.floor(index / size);
+            if (mapState[y] && mapState[y][x] !== undefined) {
+                cell.textContent = mapState[y][x];
+                cell.dataset.value = mapState[y][x];
+            } else {
+                console.error('Data missing at position:', y, x);
+                cell.textContent = ' ';
+                cell.dataset.value = ' ';
+            }
+        });
     }
 
     async function loadPyodideAndRunScript() {
@@ -51,36 +95,54 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function runPythonScript(pyodide) {
         try {
+            // Cargar y ejecutar el script de Python
+            const response = await fetch('/static/main.py');
+            const pythonScript = await response.text();
+            await pyodide.runPythonAsync(pythonScript);
+    
+            // Recolectar el puzzle actual de la cuadrícula
             const size = parseInt(gridSizeSelect.value);
             const cells = document.querySelectorAll('.grid-item');
             let puzzleList = [], currentRow = '';
-            
+    
             cells.forEach((cell, index) => {
-                currentRow += cell.dataset.value;
+                currentRow += cell.dataset.value === ' ' ? ' ' : cell.dataset.value;  // Espacios se mantienen como espacios
                 if ((index + 1) % size === 0) {
                     puzzleList.push(currentRow);
                     currentRow = '';
                 }
             });
-
+    
             const puzzle = JSON.stringify(puzzleList);
-
-
-            console.log(puzzle);
-
-            const response = await fetch('/static/main.py');  // Asegúrate de que la ruta es correcta
-            const pythonScript = await response.text();
-            await pyodide.runPythonAsync(pythonScript);
-            
+    
+            // Preparar y ejecutar el código de Python para resolver el puzzle
             const pythonCode = `
-puzzle = ${puzzle}
-solution = solve_puzzle_bfs(puzzle)
-            `;
-
-            pyodide.runPython(pythonCode);
-
-            const solution = pyodide.globals.get('solution');
-            output.textContent = `Solution:\n${solution}`;
+import json
+puzzle = json.loads('${puzzle}')
+solution_bfs, steps = solve_puzzle_bfs(puzzle)
+`;
+            await pyodide.runPythonAsync(pythonCode);
+    
+            // Obtener los resultados desde Pyodide
+            const solution_bfs = pyodide.globals.get('solution_bfs');
+            const stepsProxy = pyodide.globals.get('steps');
+    
+            // Convertir el objeto PyProxy a un array JavaScript
+            const steps = stepsProxy.toJs();
+            mapStates = steps;
+    
+            // Asegurarse de que se recibieron estados válidos del mapa
+            if (mapStates.length > 0) {
+                console.log(mapStates[0]);  // Para depuración
+                drawMap(mapStates[0]);  // Dibujar el primer estado del mapa
+                output.textContent = `Solution steps: ${solution_bfs.solution}`;
+            } else {
+                console.error("No map states received from Python.");
+                output.textContent = "No map states received from Python.";
+            }
+    
+            // Limpiar el PyProxy para liberar memoria
+            stepsProxy.destroy();
         } catch (err) {
             console.error('Error running Python script:', err);
             output.innerText = 'Error running Python script: ' + err.message;
