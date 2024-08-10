@@ -16,8 +16,12 @@ document.addEventListener('DOMContentLoaded', function () {
         gridSizeSelect.appendChild(option);
     }
 
-    // Crear una cuadrícula de 5x5 por defecto
-    createGrid(5);
+    // Inicialización con un tamaño por defecto de 10x10 o basado en la selección del usuario
+    createGrid(parseInt(gridSizeSelect.value) || 10);
+
+    gridSizeSelect.addEventListener('change', () => {
+        createGrid(parseInt(gridSizeSelect.value));
+    });
 
     gridSizeSelect.addEventListener('change', () => createGrid(parseInt(gridSizeSelect.value)));
     document.getElementById('solve-btn').addEventListener('click', loadPyodideAndRunScript);
@@ -53,29 +57,42 @@ document.addEventListener('DOMContentLoaded', function () {
             grid.appendChild(cell);
         }
     }
-    
 
-    function drawMap(mapState) {
-        const size = parseInt(gridSizeSelect.value);
-        const cells = document.querySelectorAll('.grid-item');
+    function createGridFromMapState(mapState) {
+        const rows = mapState.length;
+        const cols = mapState[0].length;  // Asumiendo que todas las filas tienen la misma longitud
+
+        grid.innerHTML = '';
+        grid.style.gridTemplateColumns = `repeat(${cols}, 40px)`;
+        grid.style.gridTemplateRows = `repeat(${rows}, 40px)`;
+
+        for (let i = 0; i < rows * cols; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'grid-item';
+            grid.appendChild(cell);
+        }
+    }
     
-        if (!mapState || mapState.length === 0 || mapState.length !== size) {
+    function drawMap(mapState) {
+        if (!mapState || mapState.length === 0) {
             console.error('Invalid map state:', mapState);
             output.textContent = 'Invalid map state received.';
             return;
         }
     
+        // Asegúrate de que el grid tenga el tamaño correcto
+        if (grid.children.length !== mapState.length * mapState[0].length) {
+            createGridFromMapState(mapState);  // Re-crear el grid para ajustar al tamaño correcto
+        }
+    
+        const size = mapState[0].length;
+        const cells = document.querySelectorAll('.grid-item');
+    
         cells.forEach((cell, index) => {
             const x = index % size;
             const y = Math.floor(index / size);
-            if (mapState[y] && mapState[y][x] !== undefined) {
-                cell.textContent = mapState[y][x];
-                cell.dataset.value = mapState[y][x];
-            } else {
-                console.error('Data missing at position:', y, x);
-                cell.textContent = ' ';
-                cell.dataset.value = ' ';
-            }
+            cell.textContent = mapState[y][x];
+            cell.dataset.value = mapState[y][x];
         });
     }
 

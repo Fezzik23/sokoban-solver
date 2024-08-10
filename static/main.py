@@ -1,6 +1,7 @@
 import collections
 import numpy as np
 import time
+import json
 
 class PuzzleSolver:
     def __init__(self, layout, method='bfs'):
@@ -176,6 +177,20 @@ class PuzzleSolver:
         pass
 
 #$##########################################################
+def calculate_board_dimensions(pos_walls):
+    # Inicializar variables para almacenar las dimensiones máximas
+    max_x = 0
+    max_y = 0
+
+    # Iterar sobre todas las posiciones de los muros
+    for (y, x) in pos_walls:  # Asumiendo que la tupla está en formato (y, x)
+        if x > max_x:
+            max_x = x
+        if y > max_y:
+            max_y = y
+
+    # Las dimensiones son max_x + 1 y max_y + 1 porque los índices comienzan en 0
+    return (max_y + 1, max_x + 1)
 
 def init_map(size, pos_walls, pos_goals):
     # Crear un mapa vacío
@@ -210,7 +225,8 @@ def update_map(map, player_pos, box_positions):
     
     return new_map
 
-def generate_maps(steps, pos_walls, pos_goals, size=(5,5)):
+def generate_maps(steps, pos_walls, pos_goals):
+    size = calculate_board_dimensions(pos_walls)
     # Inicializar el mapa
     map = init_map(size, pos_walls, pos_goals)
     maps = []
@@ -252,6 +268,10 @@ def solve_puzzle_bfs(puzzle):
 
 # Ejemplo de uso:
 
+
+test1 = json.loads("[\"#####\",\"#.  #\",\"# B #\",\"# & #\",\"#####\"]")
+test2 = json.loads("[\"  #      \",\"  #      \",\"  #####  \",\"  #.  #  \",\"  # B #  \",\"  # & #  \",\"  #####  \",\"  #      \",\"  #      \"]")
+
 easy1 = [
 "#####",
 "#.  #",
@@ -288,14 +308,14 @@ layout1 = [
 "#####"
 ]
 def test():
-
-    for row in easy1:
+    #TODO: Hacer que esto funcione para test2
+    for row in test2:
         print(row)
-    solver_bfs = PuzzleSolver(easy1, method='bfs')
+    solver_bfs = PuzzleSolver(test2, method='bfs')
     solution_bfs, time_taken_bfs = solver_bfs.solve()
     print(f"BFS: {solution_bfs}, {time_taken_bfs}")
     print_steps(solution_bfs)
     return solution_bfs
 
-#est()
-print(solve_puzzle_bfs(easy1))
+test()
+#print(solve_puzzle_bfs(easy1))
