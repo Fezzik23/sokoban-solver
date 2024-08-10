@@ -1,0 +1,66 @@
+.grid-container {
+    display: grid;
+    justify-content: center; /* Centra la cuadrícula horizontalmente */
+    align-items: center; /* Centra la cuadrícula verticalmente */
+    gap: 0px; /* Elimina el espacio entre las celdas */
+    margin: 20px auto; /* Añade margen alrededor de la cuadrícula para mejor visualización */
+}
+
+.grid-item {
+    width: 40px; /* Ancho de cada celda */
+    height: 40px; /* Altura de cada celda */
+    border: 1px solid #000; /* Borde para cada celda */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background-color: #f4f4f4; /* Fondo claro para cada celda, opcional */
+}
+
+.controls {
+    margin-top: 10px;
+    text-align: center; /* Centra los controles */
+}
+.game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+#status-indicator {
+    padding: 10px;
+    margin-top: 10px;
+    border: 2px solid #000000; /* Borde azul */
+    background-color: #E0F0FF; /* Fondo azul claro */
+    color: #000000; /* Texto azul */
+    font-weight: bold;
+    text-align: center;
+    width: 200px; /* Ajusta según tus necesidades */
+    border-radius: 5px;
+    justify-content: center;
+}.status-ready {
+    background-color: #fff09d !important;
+    border: 2px solid rgb(116, 104, 35) !important;
+}
+
+.status-solving {
+    background-color: #61aeff !important;
+    border: 2px solid #005CBF !important;
+}
+
+.status-solved {
+    background-color: #60fb84 !important;
+    border: 2px solid #1C7A30 !important;
+}
+
+@keyframes blink-animation {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+.blink {
+    animation: blink-animation 1s step-end infinite;
+}

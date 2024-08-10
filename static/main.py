@@ -1,6 +1,7 @@
 import collections
 import numpy as np
 import time
+import json
 
 class PuzzleSolver:
     def __init__(self, layout, method='bfs'):
@@ -104,7 +105,7 @@ class PuzzleSolver:
         max_cols_num = max([len(x) for x in layout])
         for i_row in range(len(layout)):
             for i_col in range(len(layout[i_row])):
-                if layout[i_row][i_col]   == ' ': layout[i_row][i_col] = 0   # free space
+                if layout[i_row][i_col]   == ' ': layout[i_row][i_col] = 0 # free space
                 elif layout[i_row][i_col] == '#': layout[i_row][i_col] = 1 # wall
                 elif layout[i_row][i_col] == '&': layout[i_row][i_col] = 2 # player
                 elif layout[i_row][i_col] == 'B': layout[i_row][i_col] = 3 # box
@@ -134,7 +135,13 @@ class PuzzleSolver:
             node_action = actions.popleft()
             if self.is_end_state(node[-1][-1]):
                 solution = ','.join(node_action[1:]).replace(',','')
-                return solution
+                result = {
+                    'solution': solution,
+                    'steps': node,
+                    'pos_walls': self.pos_walls,
+                    'pos_goals': self.pos_goals
+                }
+                return result
             if node[-1] not in exploredSet:
                 exploredSet.add(node[-1])
                 for action in self.legal_actions(node[-1][0], node[-1][1]):
@@ -166,40 +173,152 @@ class PuzzleSolver:
 
     def a_star_search(self):
         """Implementación del algoritmo A* para resolver el rompecabezas."""
-        # Aquí implementarías el algoritmo A*
+        # Aquí implementarías el algoritmo A* mas adelante
         pass
 
+#$##########################################################
+def calculate_board_dimensions(pos_walls):
+    # Inicializar variables para almacenar las dimensiones máximas
+    max_x = 0
+    max_y = 0
 
+    # Iterar sobre todas las posiciones de los muros
+    for (y, x) in pos_walls:  # Asumiendo que la tupla está en formato (y, x)
+        if x > max_x:
+            max_x = x
+        if y > max_y:
+            max_y = y
+
+    # Las dimensiones son max_x + 1 y max_y + 1 porque los índices comienzan en 0
+    return (max_y + 1, max_x + 1)
+
+def init_map(size, pos_walls, pos_goals):
+    # Crear un mapa vacío
+    map = [[" " for _ in range(size[1])] for _ in range(size[0])]
+    
+    # Colocar los muros
+    for wall in pos_walls:
+        map[wall[0]][wall[1]] = "#"
+    
+    # Colocar los objetivos
+    for goal in pos_goals:
+        map[goal[0]][goal[1]] = "."
+        
+    return map
+
+def update_map(map, player_pos, box_positions):
+    # Crear una copia del mapa para modificar
+    new_map = [row[:] for row in map]
+    
+    # Limpiar las posiciones antiguas de cajas y jugador
+    for y in range(len(new_map)):
+        for x in range(len(new_map[y])):
+            if new_map[y][x] in "&B":
+                new_map[y][x] = " " if new_map[y][x] == "&" else new_map[y][x]
+    
+    # Colocar el jugador
+    new_map[player_pos[0]][player_pos[1]] = "&"
+    
+    # Colocar las cajas
+    for box in box_positions:
+        new_map[box[0]][box[1]] = "B"
+    
+    return new_map
+
+def generate_maps(steps, pos_walls, pos_goals):
+    size = calculate_board_dimensions(pos_walls)
+    # Inicializar el mapa
+    map = init_map(size, pos_walls, pos_goals)
+    maps = []
+    
+    # Procesar cada paso
+    for step in steps:
+        player_pos, box_positions = step
+        map = update_map(map, player_pos, box_positions)
+        maps.append([row[:] for row in map])  # Añadir una copia del estado actual del mapa
+        
+    return maps
+
+def print_map(map):
+    for row in map:
+        print("".join(row))
+    print()
+
+def print_steps(solution_bfs):
+    steps = solution_bfs['steps']
+    pos_walls = solution_bfs['pos_walls']
+    pos_goals = solution_bfs['pos_goals']
+
+    generated_maps = generate_maps(steps, pos_walls, pos_goals)
+    # for map_state in generated_maps:
+    #     print_map(map_state)
+    
+    # pass
+    return generated_maps
+
+#$##################################################################
+
+def solve_puzzle_bfs(puzzle):
+    solver_bfs = PuzzleSolver(puzzle, method='bfs')
+    solution_bfs, time_taken_bfs = solver_bfs.solve()
+    steps = print_steps(solution_bfs=solution_bfs)
+    return solution_bfs, steps
 
 # Solución utilizando BFS
+
+# Ejemplo de uso:
+
+
+test1 = json.loads("[\"#####\",\"#.  #\",\"# B #\",\"# & #\",\"#####\"]")
+test2 = json.loads("[\"  #      \",\"  #      \",\"  #####  \",\"  #.  #  \",\"  # B #  \",\"  # & #  \",\"  #####  \",\"  #      \",\"  #      \"]")
+
+easy1 = [
+"#####",
+"#.  #",
+"# B #",
+"#  &#",
+"#####"
+]
+easy2 = [
+"###",
+"# #",
+"###"
+]
+easy3 = [
+"###",
+"#.#",
+"#B#",
+"#&#",
+"###"
+]
+
+blocked= [
+"#####",
+"#.  #",
+"#   #",
+"#B &#",
+"#####"
+]
+layout1 = [
+"#######",
+"##&##..#",
+"# BB B.#",
+"#   B  #",
+"####  .#",
+"#####"
+]
+
+
+
 def test():
-    # Ejemplo de uso:
-    
-    easy1 = [
-    "#####",
-    "#.  #",
-    "# B #",
-    "#  &#",
-    "#####"
-    ]
-    blocked= [
-    "#####",
-    "#.  #",
-    "#   #",
-    "#B &#",
-    "#####"
-    ]
-    layout1 = [
-    "#######",
-    "##&##..#",
-    "# BB B.#",
-    "#   B  #",
-    "####  .#",
-    "#####"
-    ]
-    for row in easy1:
+    #TODO: Hacer que esto funcione para test2
+    for row in layout1:
         print(row)
-    solver_bfs = PuzzleSolver(easy1, method='bfs')
+    solver_bfs = PuzzleSolver(layout1, method='bfs')
     solution_bfs, time_taken_bfs = solver_bfs.solve()
     print(f"BFS: {solution_bfs}, {time_taken_bfs}")
+    print_steps(solution_bfs)
     return solution_bfs
+
+#$test()
+#print(solve_puzzle_bfs(easy1))
