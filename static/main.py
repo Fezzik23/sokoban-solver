@@ -307,15 +307,18 @@ layout1 = [
 "####  .#",
 "#####"
 ]
+
+
+
 def test():
     #TODO: Hacer que esto funcione para test2
-    for row in test2:
+    for row in layout1:
         print(row)
-    solver_bfs = PuzzleSolver(test2, method='bfs')
+    solver_bfs = PuzzleSolver(layout1, method='bfs')
     solution_bfs, time_taken_bfs = solver_bfs.solve()
     print(f"BFS: {solution_bfs}, {time_taken_bfs}")
     print_steps(solution_bfs)
     return solution_bfs
 
-test()
+#$test()
 #print(solve_puzzle_bfs(easy1))

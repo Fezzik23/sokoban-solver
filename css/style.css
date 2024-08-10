@@ -21,3 +21,46 @@
     margin-top: 10px;
     text-align: center; /* Centra los controles */
 }
+.game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+#status-indicator {
+    padding: 10px;
+    margin-top: 10px;
+    border: 2px solid #000000; /* Borde azul */
+    background-color: #E0F0FF; /* Fondo azul claro */
+    color: #000000; /* Texto azul */
+    font-weight: bold;
+    text-align: center;
+    width: 200px; /* Ajusta según tus necesidades */
+    border-radius: 5px;
+    justify-content: center;
+}.status-ready {
+    background-color: #fff09d !important;
+    border: 2px solid rgb(116, 104, 35) !important;
+}
+
+.status-solving {
+    background-color: #61aeff !important;
+    border: 2px solid #005CBF !important;
+}
+
+.status-solved {
+    background-color: #60fb84 !important;
+    border: 2px solid #1C7A30 !important;
+}
+
+@keyframes blink-animation {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+.blink {
+    animation: blink-animation 1s step-end infinite;
+}

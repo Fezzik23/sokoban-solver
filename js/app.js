@@ -5,6 +5,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const output = document.getElementById('output');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
+
+    const statusIndicator = document.getElementById('status-indicator');
+    console.log("Cambiando clase a status-ready");
+    statusIndicator.className = 'status-ready';
+    console.log("Clase cambiada:", statusIndicator.className);
+    statusIndicator.textContent = 'Draw a map';
+
     let currentStep = 0;
     let mapStates = [];  // Aquí almacenaremos los estados del mapa
 
@@ -40,6 +47,33 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    function filterMapState(mapState) {
+        // Filtrar filas vacías
+        let filteredRows = mapState.filter(row => row.some(cell => cell.trim() !== ''));
+    
+        if (filteredRows.length === 0) {
+            return [];  // Retorna un array vacío si todas las filas son vacías
+        }
+    
+        // Filtrar columnas vacías
+        let columnsCount = filteredRows[0].length;
+        let columnsToRemove = new Array(columnsCount).fill(true);
+    
+        // Determinar qué columnas son completamente vacías
+        filteredRows.forEach(row => {
+            row.forEach((cell, index) => {
+                if (cell.trim() !== '') {
+                    columnsToRemove[index] = false;
+                }
+            });
+        });
+    
+        // Filtrar las columnas marcadas como 'true' en columnsToRemove
+        return filteredRows.map(row =>
+            row.filter((_, index) => !columnsToRemove[index])
+        );
+    }
+
     function createGrid(size) {
         grid.innerHTML = '';
         grid.style.gridTemplateColumns = `repeat(${size}, 40px)`;
@@ -59,8 +93,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function createGridFromMapState(mapState) {
+        if (mapState.length === 0 || mapState[0].length === 0) {
+            console.error('Map state is empty or invalid.');
+            return;
+        }
+
         const rows = mapState.length;
-        const cols = mapState[0].length;  // Asumiendo que todas las filas tienen la misma longitud
+        const cols = mapState[0].length;
 
         grid.innerHTML = '';
         grid.style.gridTemplateColumns = `repeat(${cols}, 40px)`;
@@ -72,41 +111,44 @@ document.addEventListener('DOMContentLoaded', function () {
             grid.appendChild(cell);
         }
     }
-    
+
     function drawMap(mapState) {
-        if (!mapState || mapState.length === 0) {
-            console.error('Invalid map state:', mapState);
-            output.textContent = 'Invalid map state received.';
+        const filteredMapState = filterMapState(mapState);
+        if (filteredMapState.length === 0 || filteredMapState[0].length === 0) {
+            console.error('Filtered map state is empty or invalid.');
             return;
         }
-    
-        // Asegúrate de que el grid tenga el tamaño correcto
-        if (grid.children.length !== mapState.length * mapState[0].length) {
-            createGridFromMapState(mapState);  // Re-crear el grid para ajustar al tamaño correcto
-        }
-    
-        const size = mapState[0].length;
+
+        createGridFromMapState(filteredMapState);
+
         const cells = document.querySelectorAll('.grid-item');
-    
-        cells.forEach((cell, index) => {
-            const x = index % size;
-            const y = Math.floor(index / size);
-            cell.textContent = mapState[y][x];
-            cell.dataset.value = mapState[y][x];
+        filteredMapState.forEach((row, y) => {
+            row.forEach((value, x) => {
+                const cell = cells[y * filteredMapState[0].length + x];
+                cell.textContent = value;
+                cell.dataset.value = value;
+            });
         });
     }
 
     async function loadPyodideAndRunScript() {
-        let pyodide;
         try {
-            // Descomenta la siguiente línea si estás usando Pyodide localmente
-            //@ pyodide = await loadPyodide({ indexURL : "/pyodide/" });
-            pyodide = await loadPyodide({ indexURL : "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/" });
+            statusIndicator.className = 'status-solving';
+            statusIndicator.innerHTML = 'Solving<span class="blink">...</span>';
+            
+            // Carga Pyodide y ejecuta el script
+            let pyodide = await loadPyodide({ indexURL : "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/" });
             await pyodide.loadPackage('numpy');
-            runPythonScript(pyodide);
+            await runPythonScript(pyodide);
+            
+            // Cambiar a resuelto si todo es exitoso
+            statusIndicator.className = 'status-solved';
+            statusIndicator.textContent = 'Solved';
         } catch (err) {
             console.error('Error loading Pyodide:', err);
             output.innerText = 'Error loading Pyodide: ' + err.message;
+            statusIndicator.textContent = 'Error';
+            statusIndicator.className = 'status-error'; // Asegúrate de definir una clase para errores si necesario
         }
     }
 
