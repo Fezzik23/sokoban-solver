@@ -206,22 +206,22 @@ def init_map(size, pos_walls, pos_goals):
         
     return map
 
-def update_map(map, player_pos, box_positions):
+def update_map(map, player_pos, box_positions, goals_positions):
     # Crear una copia del mapa para modificar
     new_map = [row[:] for row in map]
     
-    # Limpiar las posiciones antiguas de cajas y jugador
+    # Limpiar las posiciones antiguas de cajas y jugador, respetando los objetivos
     for y in range(len(new_map)):
         for x in range(len(new_map[y])):
             if new_map[y][x] in "&B":
-                new_map[y][x] = " " if new_map[y][x] == "&" else new_map[y][x]
+                new_map[y][x] = "." if (y, x) in goals_positions else " "
     
     # Colocar el jugador
     new_map[player_pos[0]][player_pos[1]] = "&"
     
     # Colocar las cajas
     for box in box_positions:
-        new_map[box[0]][box[1]] = "B"
+        new_map[box[0]][box[1]] = "X" if (box[0], box[1]) in goals_positions else "B"
     
     return new_map
 
@@ -234,7 +234,7 @@ def generate_maps(steps, pos_walls, pos_goals):
     # Procesar cada paso
     for step in steps:
         player_pos, box_positions = step
-        map = update_map(map, player_pos, box_positions)
+        map = update_map(map, player_pos, box_positions, pos_goals)
         maps.append([row[:] for row in map])  # Añadir una copia del estado actual del mapa
         
     return maps
@@ -250,8 +250,8 @@ def print_steps(solution_bfs):
     pos_goals = solution_bfs['pos_goals']
 
     generated_maps = generate_maps(steps, pos_walls, pos_goals)
-    # for map_state in generated_maps:
-    #     print_map(map_state)
+    for map_state in generated_maps:
+        print_map(map_state)
     
     # pass
     return generated_maps
@@ -278,6 +278,17 @@ easy1 = [
 "# B #",
 "#  &#",
 "#####"
+]
+bug1 = [
+"###",
+"#.#",
+"#.#",
+"#B #",
+"#& #",
+"#  #",
+"#B #",
+"#  #",
+"####"
 ]
 easy2 = [
 "###",
@@ -312,13 +323,13 @@ layout1 = [
 
 def test():
     #TODO: Hacer que esto funcione para test2
-    for row in layout1:
+    for row in bug1:
         print(row)
-    solver_bfs = PuzzleSolver(layout1, method='bfs')
+    solver_bfs = PuzzleSolver(bug1, method='bfs')
     solution_bfs, time_taken_bfs = solver_bfs.solve()
     print(f"BFS: {solution_bfs}, {time_taken_bfs}")
     print_steps(solution_bfs)
     return solution_bfs
 
-#$test()
+test()
 #print(solve_puzzle_bfs(easy1))
