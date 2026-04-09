@@ -55,6 +55,16 @@
     border: 2px solid #1C7A30 !important;
 }
 
+.status-unsolved {
+    background-color: #f8d46b !important;
+    border: 2px solid #8a6f00 !important;
+}
+
+.status-error {
+    background-color: #ffb3b3 !important;
+    border: 2px solid #b00020 !important;
+}
+
 @keyframes blink-animation {
     0% { opacity: 1; }
     50% { opacity: 0; }

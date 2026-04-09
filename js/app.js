@@ -7,13 +7,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const nextBtn = document.getElementById('next-btn');
 
     const statusIndicator = document.getElementById('status-indicator');
-    console.log("Cambiando clase a status-ready");
     statusIndicator.className = 'status-ready';
-    console.log("Clase cambiada:", statusIndicator.className);
     statusIndicator.textContent = 'Draw a map';
 
     let currentStep = 0;
     let mapStates = [];  // Aquí almacenaremos los estados del mapa
+    let gridRows = 10;
+    let gridCols = 10;
 
     // Añadir opciones de tamaño de cuadrícula dinámicamente
     for (let i = 5; i <= 20; i++) {
@@ -30,8 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
         createGrid(parseInt(gridSizeSelect.value));
     });
 
-    gridSizeSelect.addEventListener('change', () => createGrid(parseInt(gridSizeSelect.value)));
-    document.getElementById('solve-btn').addEventListener('click', loadPyodideAndRunScript);
+    document.getElementById('solve-btn').addEventListener('click', solveCurrentGrid);
 
     prevBtn.addEventListener('click', () => {
         if (currentStep > 0) {
@@ -75,6 +74,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function createGrid(size) {
+        gridRows = size;
+        gridCols = size;
         grid.innerHTML = '';
         grid.style.gridTemplateColumns = `repeat(${size}, 40px)`;
         grid.style.gridTemplateRows = `repeat(${size}, 40px)`;
@@ -100,6 +101,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const rows = mapState.length;
         const cols = mapState[0].length;
+        gridRows = rows;
+        gridCols = cols;
 
         grid.innerHTML = '';
         grid.style.gridTemplateColumns = `repeat(${cols}, 40px)`;
@@ -131,80 +134,54 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    async function loadPyodideAndRunScript() {
+    function collectPuzzleFromGrid() {
+        const cells = document.querySelectorAll('.grid-item');
+        const puzzleList = [];
+        let currentRow = '';
+
+        cells.forEach((cell, index) => {
+            currentRow += cell.dataset.value === ' ' ? ' ' : cell.dataset.value;
+            if ((index + 1) % gridCols === 0) {
+                puzzleList.push(currentRow);
+                currentRow = '';
+            }
+        });
+
+        return puzzleList.slice(0, gridRows);
+    }
+
+    function solveCurrentGrid() {
         try {
             statusIndicator.className = 'status-solving';
             statusIndicator.innerHTML = 'Solving<span class="blink">...</span>';
-            
-            // Carga Pyodide y ejecuta el script
-            let pyodide = await loadPyodide({ indexURL : "https://cdn.jsdelivr.net/pyodide/v0.21.3/full/" });
-            await pyodide.loadPackage('numpy');
-            await runPythonScript(pyodide);
-            
-            // Cambiar a resuelto si todo es exitoso
-            statusIndicator.className = 'status-solved';
-            statusIndicator.textContent = 'Solved';
-        } catch (err) {
-            console.error('Error loading Pyodide:', err);
-            output.innerText = 'Error loading Pyodide: ' + err.message;
-            statusIndicator.textContent = 'Error';
-            statusIndicator.className = 'status-error'; // Asegúrate de definir una clase para errores si necesario
-        }
-    }
 
-    async function runPythonScript(pyodide) {
-        try {
-            // Cargar y ejecutar el script de Python
-            const response = await fetch('/static/main.py');
-            const pythonScript = await response.text();
-            await pyodide.runPythonAsync(pythonScript);
-    
-            // Recolectar el puzzle actual de la cuadrícula
-            const size = parseInt(gridSizeSelect.value);
-            const cells = document.querySelectorAll('.grid-item');
-            let puzzleList = [], currentRow = '';
-    
-            cells.forEach((cell, index) => {
-                currentRow += cell.dataset.value === ' ' ? ' ' : cell.dataset.value;  // Espacios se mantienen como espacios
-                if ((index + 1) % size === 0) {
-                    puzzleList.push(currentRow);
-                    currentRow = '';
-                }
-            });
-    
-            const puzzle = JSON.stringify(puzzleList);
-    
-            // Preparar y ejecutar el código de Python para resolver el puzzle
-            const pythonCode = `
-import json
-puzzle = json.loads('${puzzle}')
-solution_bfs, steps = solve_puzzle_bfs(puzzle)
-`;
-            await pyodide.runPythonAsync(pythonCode);
-    
-            // Obtener los resultados desde Pyodide
-            const solution_bfs = pyodide.globals.get('solution_bfs');
-            const stepsProxy = pyodide.globals.get('steps');
-    
-            // Convertir el objeto PyProxy a un array JavaScript
-            const steps = stepsProxy.toJs();
-            mapStates = steps;
-    
-            // Asegurarse de que se recibieron estados válidos del mapa
+            const puzzle = collectPuzzleFromGrid();
+            const solutionBfs = SokobanSolver.solvePuzzleBfs(puzzle);
+            mapStates = solutionBfs.maps;
+            currentStep = 0;
+
             if (mapStates.length > 0) {
-                console.log(mapStates[0]);  // Para depuración
-                drawMap(mapStates[0]);  // Dibujar el primer estado del mapa
-                output.textContent = `Solution steps: ${solution_bfs.solution}`;
+                drawMap(mapStates[0]);
+                const solutionText = solutionBfs.solution || '(sin solución)';
+                output.textContent = `Solution steps: ${solutionText}`;
+
+                if (solutionBfs.solution) {
+                    statusIndicator.className = 'status-solved';
+                    statusIndicator.textContent = 'Solved';
+                } else {
+                    statusIndicator.className = 'status-unsolved';
+                    statusIndicator.textContent = 'No solution';
+                }
             } else {
-                console.error("No map states received from Python.");
-                output.textContent = "No map states received from Python.";
+                output.textContent = 'No map states received from solver.';
+                statusIndicator.className = 'status-error';
+                statusIndicator.textContent = 'Error';
             }
-    
-            // Limpiar el PyProxy para liberar memoria
-            stepsProxy.destroy();
         } catch (err) {
-            console.error('Error running Python script:', err);
-            output.innerText = 'Error running Python script: ' + err.message;
+            console.error('Error running solver:', err);
+            output.innerText = 'Error running solver: ' + err.message;
+            statusIndicator.textContent = 'Error';
+            statusIndicator.className = 'status-error';
         }
     }
 });
