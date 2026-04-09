@@ -2,6 +2,12 @@
 
 Solver visual de Sokoban con búsqueda en anchura (BFS), implementado en JavaScript puro.
 
+## Autoría y ampliación
+
+Este proyecto fue desarrollado originalmente de forma manual por Sergio Martín en Python, incluyendo la lógica inicial del solver y la estructura base del juego.
+
+La versión actual amplía ese trabajo con ayuda de agentes de Codex: se migró el solver a JavaScript puro, se eliminó la dependencia de Python/Pyodide para el despliegue web, se añadieron pruebas ejecutables con Node y se incorporó una visualización animada de la solución paso a paso.
+
 Ya no depende de Python, NumPy ni Pyodide. La interfaz llama directamente a `js/solver.js` desde `js/app.js`, y el mismo solver se puede ejecutar desde Node para pruebas automatizadas.
 
 ## Casillas

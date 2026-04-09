@@ -1,68 +1,323 @@
-.grid-container {
-    display: grid;
-    justify-content: center; /* Centra la cuadrícula horizontalmente */
-    align-items: center; /* Centra la cuadrícula verticalmente */
-    gap: 0px; /* Elimina el espacio entre las celdas */
-    margin: 20px auto; /* Añade margen alrededor de la cuadrícula para mejor visualización */
+:root {
+    --page-bg: #f6f7f5;
+    --ink: #181a17;
+    --muted: #62675f;
+    --line: #c8cec3;
+    --surface: #ffffff;
+    --surface-strong: #eef2ea;
+    --accent: #0f8f7a;
+    --accent-strong: #0a6859;
+    --coral: #d74f45;
+    --sun: #f4cf4d;
+    --good: #48b96a;
+    --cell-size: 40px;
 }
 
-.grid-item {
-    width: 40px; /* Ancho de cada celda */
-    height: 40px; /* Altura de cada celda */
-    border: 1px solid #000; /* Borde para cada celda */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    background-color: #f4f4f4; /* Fondo claro para cada celda, opcional */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    color: var(--ink);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+        linear-gradient(90deg, rgba(24, 26, 23, 0.04) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(24, 26, 23, 0.04) 1px, transparent 1px),
+        var(--page-bg);
+    background-size: 32px 32px;
+}
+
+.app-shell {
+    width: min(1180px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 36px 0 48px;
+}
+
+.page-header {
+    max-width: 720px;
+    margin-bottom: 26px;
+}
+
+.eyebrow {
+    margin: 0 0 8px;
+    color: var(--accent-strong);
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+    margin-top: 0;
+}
+
+h1 {
+    max-width: 680px;
+    margin-bottom: 10px;
+    font-size: 44px;
+    line-height: 1.05;
+}
+
+.intro {
+    max-width: 620px;
+    margin-bottom: 0;
+    color: var(--muted);
+    font-size: 18px;
+    line-height: 1.55;
 }
 
 .controls {
-    margin-top: 10px;
-    text-align: center; /* Centra los controles */
+    display: flex;
+    align-items: end;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: 0 12px 30px rgba(24, 26, 23, 0.08);
 }
+
+.control-field {
+    display: grid;
+    gap: 6px;
+}
+
+label {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+select,
+button {
+    min-height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink);
+    font: inherit;
+}
+
+select {
+    min-width: 142px;
+    padding: 0 36px 0 12px;
+    background: var(--surface-strong);
+}
+
+.button-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 0 16px;
+    background: var(--surface);
+    cursor: pointer;
+    font-weight: 800;
+    transition: transform 120ms ease, border-color 120ms ease, background-color 120ms ease;
+}
+
+button:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.primary-button {
+    border-color: var(--accent-strong);
+    background: var(--accent);
+    color: #ffffff;
+}
+
+.legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 18px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.76);
+}
+
+.legend-icon {
+    width: 24px;
+    height: 24px;
+    border: 1px solid rgba(24, 26, 23, 0.22);
+    border-radius: 6px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 80%;
+}
+
+.boards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(280px, max-content));
+    align-items: start;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 28px;
+}
+
 .game-area {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    margin-top: 20px;
+    min-width: 280px;
 }
 
-#status-indicator {
-    padding: 10px;
-    margin-top: 10px;
-    border: 2px solid #000000; /* Borde azul */
-    background-color: #E0F0FF; /* Fondo azul claro */
-    color: #000000; /* Texto azul */
-    font-weight: bold;
-    text-align: center;
-    width: 200px; /* Ajusta según tus necesidades */
-    border-radius: 5px;
+.board-heading {
+    width: 100%;
+    max-width: 520px;
+    margin-bottom: 8px;
+}
+
+.board-heading h2 {
+    margin-bottom: 4px;
+    font-size: 21px;
+}
+
+.board-heading p {
+    margin-bottom: 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.grid-container {
+    display: grid;
     justify-content: center;
-}.status-ready {
-    background-color: #fff09d !important;
-    border: 2px solid rgb(116, 104, 35) !important;
+    align-items: center;
+    gap: 0;
+    margin: 12px auto 14px;
+    border: 3px solid var(--ink);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--ink);
+    box-shadow: 0 18px 36px rgba(24, 26, 23, 0.16);
+}
+
+.grid-item {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    border: 1px solid rgba(24, 26, 23, 0.24);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background-color: #eef0eb;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 82%;
+    font-weight: bold;
+    transition: background-color 120ms ease, transform 120ms ease;
+}
+
+.cell-wall {
+    background-color: #343633;
+    color: #ffffff;
+    background-image: url("/assets/wall.svg");
+}
+
+.cell-goal {
+    background-color: var(--sun);
+    color: #000000;
+    background-image: url("/assets/goal.svg");
+}
+
+.cell-box {
+    background-color: #c87838;
+    color: #000000;
+    background-image: url("/assets/box.svg");
+}
+
+.cell-box-on-goal {
+    background-color: var(--good);
+    color: #000000;
+    transform: scale(1.04);
+    background-image: url("/assets/box-on-goal.svg");
+}
+
+.cell-player {
+    background-color: #5aa7d8;
+    color: #000000;
+    transform: scale(1.04);
+    background-image: url("/assets/player.svg");
+}
+
+.cell-empty {
+    background-color: #eef0eb;
+    color: #000000;
+}
+
+.solution-area[hidden] {
+    display: none;
+}
+
+#status-indicator,
+#animation-status,
+#output {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink);
+    font-weight: 800;
+    text-align: center;
+}
+
+#status-indicator,
+#animation-status {
+    width: 220px;
+    padding: 10px 12px;
+}
+
+#output {
+    margin-top: 24px;
+    padding: 16px;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+    box-shadow: 0 12px 30px rgba(24, 26, 23, 0.08);
+}
+
+.status-ready {
+    background-color: #fff5a8 !important;
+    border-color: #8b7a21 !important;
 }
 
 .status-solving {
-    background-color: #61aeff !important;
-    border: 2px solid #005CBF !important;
+    background-color: #bfe9df !important;
+    border-color: var(--accent-strong) !important;
 }
 
 .status-solved {
-    background-color: #60fb84 !important;
-    border: 2px solid #1C7A30 !important;
+    background-color: #c9f3d3 !important;
+    border-color: #23753c !important;
 }
 
 .status-unsolved {
-    background-color: #f8d46b !important;
-    border: 2px solid #8a6f00 !important;
+    background-color: #ffe1a3 !important;
+    border-color: #9c6b10 !important;
 }
 
 .status-error {
-    background-color: #ffb3b3 !important;
-    border: 2px solid #b00020 !important;
+    background-color: #ffd0cf !important;
+    border-color: #b42318 !important;
 }
 
 @keyframes blink-animation {
@@ -73,4 +328,42 @@
 
 .blink {
     animation: blink-animation 1s step-end infinite;
+}
+
+@media (max-width: 760px) {
+    .app-shell {
+        width: min(100% - 20px, 560px);
+        padding-top: 24px;
+    }
+
+    h1 {
+        font-size: 34px;
+    }
+
+    .intro {
+        font-size: 16px;
+    }
+
+    .boards {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 26px;
+    }
+
+    .controls,
+    .button-row {
+        align-items: stretch;
+    }
+
+    .control-field,
+    .button-row,
+    select,
+    button {
+        width: 100%;
+    }
+
+    .grid-container {
+        max-width: 100%;
+        overflow: auto;
+    }
 }
