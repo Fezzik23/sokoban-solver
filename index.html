@@ -1,35 +1,78 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sokoban Solver JS</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <h1>Sokoban Solver JS</h1>
-    <div class="controls">
-        <label for="grid-size">Grid Size:</label>
-        <select id="grid-size">
-            <!-- Las opciones se añadirán dinámicamente con JavaScript -->
-        </select>
-        <label for="element-select">Select Element:</label>
-        <select id="element-select">
-            <option value=" ">Empty</option>
-            <option value="#">Wall</option>
-            <option value=".">Target</option>
-            <option value="B">Box</option>
-            <option value="&">Player</option>
-        </select>
-        <button id="solve-btn">Solve</button>
-        <button id="prev-btn">Prev</button>
-        <button id="next-btn">Next</button>
-    </div>
-    <div class="game-area">
-        <div class="grid-container" id="grid">
-            <!-- JavaScript will generate the grid items here -->
-        </div>
-        <div id="status-indicator">Draw a map</div>
-    </div>
-    <div id="output">Output will be displayed here</div>
+    <main class="app-shell">
+        <header class="page-header">
+            <p class="eyebrow">Sokoban Solver</p>
+            <h1>Resuelve mapas Sokoban</h1>
+            <p class="intro">Dibuja paredes, cajas, objetivos y jugador. Al resolver, la ruta aparece en texto y se reproduce en bucle.</p>
+        </header>
+
+        <section class="controls" aria-label="Controles del mapa">
+            <div class="control-field">
+                <label for="grid-size">Tamaño</label>
+                <select id="grid-size">
+                    <!-- Las opciones se añadirán dinámicamente con JavaScript -->
+                </select>
+            </div>
+
+            <div class="control-field">
+                <label for="element-select">Pieza</label>
+                <select id="element-select">
+                    <option value=" ">Vacío</option>
+                    <option value="#">Muro</option>
+                    <option value=".">Objetivo</option>
+                    <option value="B">Caja</option>
+                    <option value="&">Jugador</option>
+                </select>
+            </div>
+
+            <div class="button-row">
+                <button id="solve-btn" class="primary-button">Resolver</button>
+                <button id="prev-btn">Anterior</button>
+                <button id="next-btn">Siguiente</button>
+            </div>
+        </section>
+
+        <section class="legend" aria-label="Leyenda">
+            <span><i class="legend-icon cell-player"></i>Jugador</span>
+            <span><i class="legend-icon cell-wall"></i>Muro</span>
+            <span><i class="legend-icon cell-box"></i>Caja</span>
+            <span><i class="legend-icon cell-goal"></i>Objetivo</span>
+            <span><i class="legend-icon cell-box-on-goal"></i>Caja colocada</span>
+        </section>
+
+        <section class="boards" aria-label="Tableros">
+            <div class="game-area">
+                <div class="board-heading">
+                    <h2>Mapa</h2>
+                    <p>Haz clic en las celdas para dibujar.</p>
+                </div>
+                <div class="grid-container" id="grid">
+                    <!-- JavaScript will generate the grid items here -->
+                </div>
+                <div id="status-indicator">Dibuja un mapa</div>
+            </div>
+            <div class="game-area solution-area" id="solution-area" hidden>
+                <div class="board-heading">
+                    <h2>Solución</h2>
+                    <p>Replay automático en bucle.</p>
+                </div>
+                <div class="grid-container" id="solution-grid">
+                    <!-- JavaScript will animate the solution here -->
+                </div>
+                <div id="animation-status">Esperando solución</div>
+            </div>
+        </section>
+
+        <div id="output">La solución aparecerá aquí.</div>
+    </main>
 
     <script src="/js/solver.js"></script>
     <script src="/js/app.js"></script>

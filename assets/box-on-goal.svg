@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Box on goal">
+  <circle cx="32" cy="32" r="25" fill="#79dd8a" stroke="#1d1d1d" stroke-width="4"/>
+  <rect x="13" y="13" width="38" height="38" rx="5" fill="#c87838" stroke="#2b1a0f" stroke-width="4"/>
+  <path d="M17 17l30 30M47 17L17 47M32 14v36M14 32h36" stroke="#8d481f" stroke-width="3" stroke-linecap="round"/>
+  <path d="M23 32l6 6 13-15" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
