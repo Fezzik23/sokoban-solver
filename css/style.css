@@ -295,6 +295,9 @@ select:disabled {
 .map-list {
     display: grid;
     gap: 10px;
+    max-height: 460px;
+    padding-right: 4px;
+    overflow-y: auto;
 }
 
 .map-list-item {
@@ -306,6 +309,15 @@ select:disabled {
     border: 1px solid var(--line);
     border-radius: 8px;
     background: var(--surface);
+    text-align: left;
+}
+
+.map-list-item:hover:not(:disabled) {
+    border-color: var(--accent);
+}
+
+.map-list-item:disabled {
+    cursor: not-allowed;
 }
 
 .map-name {
@@ -422,14 +434,14 @@ select:disabled {
 }
 
 .cell-player {
-    background-color: #5aa7d8;
+    background-color: #eef0eb;
     color: #000000;
     transform: scale(1.04);
     background-image: url("/assets/player.svg");
 }
 
 .cell-player-on-goal {
-    background-color: #8fd6ba;
+    background-color: var(--sun);
     color: #000000;
     transform: scale(1.04);
     background-image: url("/assets/player.svg");

@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const gridSizeSelect = document.getElementById('grid-size');
     const output = document.getElementById('output');
     const solveBtn = document.getElementById('solve-btn');
+    const sampleBtn = document.getElementById('sample-btn');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
     const loadingIndicator = document.getElementById('loading-indicator');
@@ -54,6 +55,33 @@ document.addEventListener('DOMContentLoaded', function () {
         state: null,
         loaded: false,
     };
+    const sampleLayouts = [
+        SokobanSolver.EXAMPLE_MAPS.easy1,
+        SokobanSolver.EXAMPLE_MAPS.bug1,
+        [
+            '#######',
+            '#     #',
+            '# .B& #',
+            '#     #',
+            '#######',
+        ],
+        [
+            '########',
+            '# .  . #',
+            '# B  B #',
+            '#   &  #',
+            '########',
+        ],
+        [
+            '########',
+            '#  .   #',
+            '#  B   #',
+            '#  #   #',
+            '#  B . #',
+            '#  &   #',
+            '########',
+        ],
+    ];
 
     for (let i = 5; i <= 20; i++) {
         const option = document.createElement('option');
@@ -70,6 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     solveBtn.addEventListener('click', solveCurrentGrid);
+    sampleBtn.addEventListener('click', loadRandomSampleMap);
     prevBtn.addEventListener('click', () => {
         if (currentStep > 0) {
             currentStep -= 1;
@@ -159,6 +188,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function setSolverLoadingState(isLoading) {
         loadingIndicator.hidden = !isLoading;
         solveBtn.disabled = isLoading;
+        sampleBtn.disabled = isLoading;
         prevBtn.disabled = isLoading;
         nextBtn.disabled = isLoading;
         gridSizeSelect.disabled = isLoading;
@@ -216,7 +246,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function filterMapState(mapState) {
-        const filteredRows = mapState.filter(row => row.some(cell => cell.trim() !== ''));
+        const normalizedMap = mapState.map(row => (
+            Array.isArray(row) ? row : Array.from(String(row))
+        ));
+        const filteredRows = normalizedMap.filter(row => row.some(cell => cell.trim() !== ''));
 
         if (filteredRows.length === 0) {
             return [];
@@ -364,6 +397,26 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         return puzzleList.slice(0, gridRows);
+    }
+
+    function loadRandomSampleMap() {
+        const availableSamples = game.loaded
+            ? sampleLayouts.concat(game.levels.map(level => level.layout))
+            : sampleLayouts;
+        const randomLayout = availableSamples[Math.floor(Math.random() * availableSamples.length)];
+        const mapState = randomLayout.map(row => Array.from(row));
+        const suggestedSize = Math.max(...randomLayout.map(row => row.length), randomLayout.length);
+
+        resetSolutionPreview();
+        mapStates = [];
+        currentStep = 0;
+        if (suggestedSize >= 5 && suggestedSize <= 20) {
+            gridSizeSelect.value = String(suggestedSize);
+        }
+        drawMap(mapState);
+        statusIndicator.className = 'status-ready';
+        statusIndicator.textContent = 'Mapa de ejemplo cargado';
+        output.textContent = 'Se ha cargado un mapa de ejemplo aleatorio. Pulsa Resolver para ver la solución.';
     }
 
     function solvePuzzleInWorker(puzzle) {
@@ -542,9 +595,11 @@ document.addEventListener('DOMContentLoaded', function () {
         mapList.innerHTML = '';
 
         game.levels.forEach((level, index) => {
-            const item = document.createElement('div');
+            const item = document.createElement('button');
             const status = getMapStatus(index, level.id);
             item.className = `map-list-item map-${status}`;
+            item.type = 'button';
+            item.disabled = status === 'locked';
 
             const title = document.createElement('span');
             title.className = 'map-name';
@@ -556,6 +611,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             item.appendChild(title);
             item.appendChild(badge);
+            if (status !== 'locked') {
+                item.addEventListener('click', () => {
+                    loadGameLevel(index);
+                });
+            }
             mapList.appendChild(item);
         });
     }
