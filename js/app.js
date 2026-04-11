@@ -4,10 +4,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const solutionGrid = document.getElementById('solution-grid');
     const animationStatus = document.getElementById('animation-status');
     const gridSizeSelect = document.getElementById('grid-size');
-    const elementSelect = document.getElementById('element-select');
     const output = document.getElementById('output');
+    const solveBtn = document.getElementById('solve-btn');
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const paletteButtons = document.querySelectorAll('.palette-option');
 
     const statusIndicator = document.getElementById('status-indicator');
     statusIndicator.className = 'status-ready';
@@ -17,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let mapStates = [];  // Aquí almacenaremos los estados del mapa
     let gridRows = 10;
     let gridCols = 10;
+    let selectedElement = '#';
     let animationTimer = null;
     const animationDelayMs = 450;
     const cellLabels = {
@@ -44,7 +47,13 @@ document.addEventListener('DOMContentLoaded', function () {
         createGrid(parseInt(gridSizeSelect.value));
     });
 
-    document.getElementById('solve-btn').addEventListener('click', solveCurrentGrid);
+    solveBtn.addEventListener('click', solveCurrentGrid);
+
+    paletteButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            selectPaletteElement(button.dataset.value);
+        });
+    });
 
     prevBtn.addEventListener('click', () => {
         if (currentStep > 0) {
@@ -72,6 +81,35 @@ document.addEventListener('DOMContentLoaded', function () {
         solutionArea.hidden = true;
         solutionGrid.innerHTML = '';
         animationStatus.textContent = 'Esperando solución';
+    }
+
+    function selectPaletteElement(value) {
+        selectedElement = value === 'empty' ? ' ' : value;
+
+        paletteButtons.forEach(button => {
+            const isSelected = button.dataset.value === value;
+            button.classList.toggle('is-selected', isSelected);
+            button.setAttribute('aria-pressed', String(isSelected));
+        });
+    }
+
+    function setLoadingState(isLoading) {
+        loadingIndicator.hidden = !isLoading;
+        solveBtn.disabled = isLoading;
+        prevBtn.disabled = isLoading;
+        nextBtn.disabled = isLoading;
+        gridSizeSelect.disabled = isLoading;
+        paletteButtons.forEach(button => {
+            button.disabled = isLoading;
+        });
+    }
+
+    function waitForPaint() {
+        return new Promise(resolve => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(resolve);
+            });
+        });
     }
 
     function cellClassForValue(value) {
@@ -150,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const cell = document.createElement('div');
             setCellValue(cell, ' ');
             cell.addEventListener('click', () => {
-                setCellValue(cell, elementSelect.value);
+                setCellValue(cell, selectedElement);
             });
             grid.appendChild(cell);
         }
@@ -180,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function () {
             cell.className = 'grid-item';
             if (options.editable) {
                 cell.addEventListener('click', () => {
-                    setCellValue(cell, elementSelect.value);
+                    setCellValue(cell, selectedElement);
                 });
             }
             targetGrid.appendChild(cell);
@@ -262,14 +300,44 @@ document.addEventListener('DOMContentLoaded', function () {
         return puzzleList.slice(0, gridRows);
     }
 
-    function solveCurrentGrid() {
+    function solvePuzzleInWorker(puzzle) {
+        if (typeof Worker === 'undefined') {
+            return Promise.resolve(SokobanSolver.solvePuzzleBfs(puzzle));
+        }
+
+        return new Promise((resolve, reject) => {
+            const worker = new Worker('/js/solver-worker.js');
+
+            worker.onmessage = event => {
+                worker.terminate();
+
+                if (event.data.ok) {
+                    resolve(event.data.result);
+                } else {
+                    reject(new Error(event.data.error));
+                }
+            };
+
+            worker.onerror = event => {
+                worker.terminate();
+                reject(new Error(event.message || 'Error en el worker del solver.'));
+            };
+
+            worker.postMessage({ puzzle });
+        });
+    }
+
+    async function solveCurrentGrid() {
         try {
             resetSolutionPreview();
+            setLoadingState(true);
             statusIndicator.className = 'status-solving';
-            statusIndicator.innerHTML = 'Solving<span class="blink">...</span>';
+            statusIndicator.innerHTML = 'Resolviendo<span class="blink">...</span>';
+            output.textContent = 'Resolviendo mapa...';
+            await waitForPaint();
 
             const puzzle = collectPuzzleFromGrid();
-            const solutionBfs = SokobanSolver.solvePuzzleBfs(puzzle);
+            const solutionBfs = await solvePuzzleInWorker(puzzle);
             mapStates = solutionBfs.maps;
             currentStep = 0;
 
@@ -296,6 +364,8 @@ document.addEventListener('DOMContentLoaded', function () {
             output.innerText = 'Error al ejecutar el solver: ' + err.message;
             statusIndicator.textContent = 'Error';
             statusIndicator.className = 'status-error';
+        } finally {
+            setLoadingState(false);
         }
     }
 });
