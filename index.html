@@ -22,17 +22,6 @@
                 </select>
             </div>
 
-            <div class="control-field">
-                <label for="element-select">Pieza</label>
-                <select id="element-select">
-                    <option value=" ">Vacío</option>
-                    <option value="#">Muro</option>
-                    <option value=".">Objetivo</option>
-                    <option value="B">Caja</option>
-                    <option value="&">Jugador</option>
-                </select>
-            </div>
-
             <div class="button-row">
                 <button id="solve-btn" class="primary-button">Resolver</button>
                 <button id="prev-btn">Anterior</button>
@@ -40,12 +29,26 @@
             </div>
         </section>
 
-        <section class="legend" aria-label="Leyenda">
-            <span><i class="legend-icon cell-player"></i>Jugador</span>
-            <span><i class="legend-icon cell-wall"></i>Muro</span>
-            <span><i class="legend-icon cell-box"></i>Caja</span>
-            <span><i class="legend-icon cell-goal"></i>Objetivo</span>
-            <span><i class="legend-icon cell-box-on-goal"></i>Caja colocada</span>
+        <section class="palette" aria-label="Seleccionar pieza">
+            <p class="palette-title">Selecciona una pieza para dibujar</p>
+            <button class="palette-option is-selected" type="button" data-value="#" aria-pressed="true">
+                <i class="legend-icon cell-wall"></i>Muro
+            </button>
+            <button class="palette-option" type="button" data-value="." aria-pressed="false">
+                <i class="legend-icon cell-goal"></i>Objetivo
+            </button>
+            <button class="palette-option" type="button" data-value="B" aria-pressed="false">
+                <i class="legend-icon cell-box"></i>Caja
+            </button>
+            <button class="palette-option" type="button" data-value="&" aria-pressed="false">
+                <i class="legend-icon cell-player"></i>Jugador
+            </button>
+            <button class="palette-option" type="button" data-value="X" aria-pressed="false">
+                <i class="legend-icon cell-box-on-goal"></i>Caja colocada
+            </button>
+            <button class="palette-option" type="button" data-value="empty" aria-pressed="false">
+                <i class="legend-icon cell-empty"></i>Vacío
+            </button>
         </section>
 
         <section class="boards" aria-label="Tableros">
@@ -72,6 +75,13 @@
         </section>
 
         <div id="output">La solución aparecerá aquí.</div>
+
+        <div id="loading-indicator" class="loading-indicator" role="status" aria-live="polite" hidden>
+            <div class="loading-box">
+                <span class="loader" aria-hidden="true"></span>
+                <span>Resolviendo mapa...</span>
+            </div>
+        </div>
     </main>
 
     <script src="/js/solver.js"></script>
