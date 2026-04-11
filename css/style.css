@@ -231,6 +231,10 @@ select:disabled {
     margin-top: 28px;
 }
 
+.ad-panel {
+    margin-top: 24px;
+}
+
 .game-area {
     display: flex;
     flex-direction: column;
@@ -290,6 +294,64 @@ select:disabled {
     color: var(--muted);
     font-size: 14px;
     line-height: 1.55;
+}
+
+.ad-shell {
+    width: 100%;
+    margin-top: 18px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: 0 12px 30px rgba(24, 26, 23, 0.08);
+}
+
+.ad-kicker {
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.ad-slot {
+    width: 100%;
+    min-height: 110px;
+}
+
+.side-ad .ad-slot {
+    min-height: 250px;
+}
+
+.ad-slot-preview {
+    display: grid;
+}
+
+.ad-preview-box {
+    display: grid;
+    place-items: center;
+    min-height: inherit;
+    gap: 8px;
+    padding: 18px;
+    border: 1px dashed rgba(24, 26, 23, 0.3);
+    border-radius: 8px;
+    background:
+        linear-gradient(90deg, rgba(15, 143, 122, 0.08) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(15, 143, 122, 0.08) 1px, transparent 1px),
+        #f7faf8;
+    background-size: 18px 18px;
+    color: var(--muted);
+    text-align: center;
+}
+
+.ad-preview-box strong {
+    color: var(--ink);
+    font-size: 15px;
+}
+
+.ad-preview-box span {
+    font-size: 13px;
+    line-height: 1.45;
 }
 
 .map-list {
@@ -627,5 +689,13 @@ select:disabled {
     .grid-container {
         max-width: 100%;
         overflow: auto;
+    }
+
+    .ad-shell {
+        padding: 12px;
+    }
+
+    .side-ad .ad-slot {
+        min-height: 140px;
     }
 }
