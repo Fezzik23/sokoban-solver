@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
+    const STORAGE_KEY = 'sokoban-game-progress-v1';
     const grid = document.getElementById('grid');
     const solutionArea = document.getElementById('solution-area');
     const solutionGrid = document.getElementById('solution-grid');
@@ -10,44 +11,77 @@ document.addEventListener('DOMContentLoaded', function () {
     const nextBtn = document.getElementById('next-btn');
     const loadingIndicator = document.getElementById('loading-indicator');
     const paletteButtons = document.querySelectorAll('.palette-option');
+    const viewTabs = document.querySelectorAll('.view-tab');
+    const solverView = document.getElementById('solver-view');
+    const gameView = document.getElementById('game-view');
+
+    const playGrid = document.getElementById('play-grid');
+    const playLevelTitle = document.getElementById('play-level-title');
+    const playLevelSubtitle = document.getElementById('play-level-subtitle');
+    const playStatus = document.getElementById('play-status');
+    const playProgressPill = document.getElementById('play-progress-pill');
+    const playPrevMapBtn = document.getElementById('play-prev-map-btn');
+    const playResetMapBtn = document.getElementById('play-reset-map-btn');
+    const mapList = document.getElementById('map-list');
 
     const statusIndicator = document.getElementById('status-indicator');
     statusIndicator.className = 'status-ready';
     statusIndicator.textContent = 'Dibuja un mapa';
 
-    let currentStep = 0;
-    let mapStates = [];  // Aquí almacenaremos los estados del mapa
-    let gridRows = 10;
-    let gridCols = 10;
-    let selectedElement = '#';
-    let animationTimer = null;
-    const animationDelayMs = 450;
     const cellLabels = {
         '#': 'Muro',
         '.': 'Objetivo',
         B: 'Caja',
         X: 'Caja colocada',
         '&': 'Jugador',
+        '+': 'Jugador sobre objetivo',
         ' ': 'Vacío',
     };
 
-    // Añadir opciones de tamaño de cuadrícula dinámicamente
+    let activeView = 'solver';
+    let currentStep = 0;
+    let mapStates = [];
+    let gridRows = 10;
+    let gridCols = 10;
+    let selectedElement = '#';
+    let animationTimer = null;
+    let autoAdvanceTimer = null;
+    const animationDelayMs = 450;
+    const game = {
+        levels: [],
+        completedIds: new Set(),
+        currentIndex: 0,
+        state: null,
+        loaded: false,
+    };
+
     for (let i = 5; i <= 20; i++) {
-        let option = document.createElement('option');
+        const option = document.createElement('option');
         option.value = i;
         option.textContent = `${i}x${i}`;
         gridSizeSelect.appendChild(option);
     }
 
-    // Inicialización con un tamaño por defecto de 10x10 o basado en la selección del usuario
-    createGrid(parseInt(gridSizeSelect.value) || 10);
+    createGrid(parseInt(gridSizeSelect.value, 10) || 10);
 
     gridSizeSelect.addEventListener('change', () => {
         resetSolutionPreview();
-        createGrid(parseInt(gridSizeSelect.value));
+        createGrid(parseInt(gridSizeSelect.value, 10));
     });
 
     solveBtn.addEventListener('click', solveCurrentGrid);
+    prevBtn.addEventListener('click', () => {
+        if (currentStep > 0) {
+            currentStep -= 1;
+            drawMap(mapStates[currentStep]);
+        }
+    });
+    nextBtn.addEventListener('click', () => {
+        if (currentStep < mapStates.length - 1) {
+            currentStep += 1;
+            drawMap(mapStates[currentStep]);
+        }
+    });
 
     paletteButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -55,24 +89,53 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    prevBtn.addEventListener('click', () => {
-        if (currentStep > 0) {
-            currentStep--;
-            drawMap(mapStates[currentStep]);
+    viewTabs.forEach(button => {
+        button.addEventListener('click', () => {
+            setActiveView(button.dataset.viewTarget);
+        });
+    });
+
+    playPrevMapBtn.addEventListener('click', () => {
+        if (game.currentIndex > 0) {
+            loadGameLevel(game.currentIndex - 1);
         }
     });
 
-    nextBtn.addEventListener('click', () => {
-        if (currentStep < mapStates.length - 1) {
-            currentStep++;
-            drawMap(mapStates[currentStep]);
+    playResetMapBtn.addEventListener('click', () => {
+        if (game.levels.length > 0) {
+            loadGameLevel(game.currentIndex);
         }
     });
+
+    document.addEventListener('keydown', handleGameKeydown);
+
+    setActiveView('solver');
+    selectPaletteElement('#');
+    loadGameLevels();
+
+    function setActiveView(view) {
+        activeView = view;
+        viewTabs.forEach(button => {
+            const isActive = button.dataset.viewTarget === view;
+            button.classList.toggle('is-active', isActive);
+            button.setAttribute('aria-pressed', String(isActive));
+        });
+
+        solverView.hidden = view !== 'solver';
+        gameView.hidden = view !== 'game';
+    }
 
     function stopSolutionAnimation() {
         if (animationTimer) {
             clearInterval(animationTimer);
             animationTimer = null;
+        }
+    }
+
+    function clearAutoAdvanceTimer() {
+        if (autoAdvanceTimer) {
+            clearTimeout(autoAdvanceTimer);
+            autoAdvanceTimer = null;
         }
     }
 
@@ -93,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function setLoadingState(isLoading) {
+    function setSolverLoadingState(isLoading) {
         loadingIndicator.hidden = !isLoading;
         solveBtn.disabled = isLoading;
         prevBtn.disabled = isLoading;
@@ -128,6 +191,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (value === '&') {
             return 'cell-player';
         }
+        if (value === '+') {
+            return 'cell-player-on-goal';
+        }
         return 'cell-empty';
     }
 
@@ -150,18 +216,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function filterMapState(mapState) {
-        // Filtrar filas vacías
-        let filteredRows = mapState.filter(row => row.some(cell => cell.trim() !== ''));
-    
+        const filteredRows = mapState.filter(row => row.some(cell => cell.trim() !== ''));
+
         if (filteredRows.length === 0) {
-            return [];  // Retorna un array vacío si todas las filas son vacías
+            return [];
         }
-    
-        // Filtrar columnas vacías
-        let columnsCount = filteredRows[0].length;
-        let columnsToRemove = new Array(columnsCount).fill(true);
-    
-        // Determinar qué columnas son completamente vacías
+
+        const columnsCount = filteredRows[0].length;
+        const columnsToRemove = new Array(columnsCount).fill(true);
+
         filteredRows.forEach(row => {
             row.forEach((cell, index) => {
                 if (cell.trim() !== '') {
@@ -169,11 +232,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         });
-    
-        // Filtrar las columnas marcadas como 'true' en columnsToRemove
-        return filteredRows.map(row =>
+
+        return filteredRows.map(row => (
             row.filter((_, index) => !columnsToRemove[index])
-        );
+        ));
     }
 
     function createGrid(size) {
@@ -183,8 +245,8 @@ document.addEventListener('DOMContentLoaded', function () {
         grid.style.setProperty('--cell-size', `${cellSizeForColumns(size)}px`);
         grid.style.gridTemplateColumns = `repeat(${size}, var(--cell-size))`;
         grid.style.gridTemplateRows = `repeat(${size}, var(--cell-size))`;
-    
-        for (let i = 0; i < size * size; i++) {
+
+        for (let i = 0; i < size * size; i += 1) {
             const cell = document.createElement('div');
             setCellValue(cell, ' ');
             cell.addEventListener('click', () => {
@@ -213,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function () {
         targetGrid.style.gridTemplateColumns = `repeat(${cols}, var(--cell-size))`;
         targetGrid.style.gridTemplateRows = `repeat(${rows}, var(--cell-size))`;
 
-        for (let i = 0; i < rows * cols; i++) {
+        for (let i = 0; i < rows * cols; i += 1) {
             const cell = document.createElement('div');
             cell.className = 'grid-item';
             if (options.editable) {
@@ -252,6 +314,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function drawSolutionMap(mapState) {
         drawMapInGrid(solutionGrid, mapState);
+    }
+
+    function drawPlayableMap(mapState) {
+        drawMapInGrid(playGrid, mapState);
     }
 
     function startSolutionAnimation(states) {
@@ -330,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function () {
     async function solveCurrentGrid() {
         try {
             resetSolutionPreview();
-            setLoadingState(true);
+            setSolverLoadingState(true);
             statusIndicator.className = 'status-solving';
             statusIndicator.innerHTML = 'Resolviendo<span class="blink">...</span>';
             output.textContent = 'Resolviendo mapa...';
@@ -365,7 +431,224 @@ document.addEventListener('DOMContentLoaded', function () {
             statusIndicator.textContent = 'Error';
             statusIndicator.className = 'status-error';
         } finally {
-            setLoadingState(false);
+            setSolverLoadingState(false);
         }
+    }
+
+    async function loadGameLevels() {
+        try {
+            const response = await fetch('/data/maps.json');
+            if (!response.ok) {
+                throw new Error('No se pudo cargar el listado de mapas.');
+            }
+
+            const data = await response.json();
+            if (!data.levels || !Array.isArray(data.levels) || data.levels.length === 0) {
+                throw new Error('El JSON de mapas está vacío o es inválido.');
+            }
+
+            game.levels = data.levels;
+            game.completedIds = sanitizeCompletedIds(readStoredProgress());
+            game.loaded = true;
+            game.currentIndex = Math.min(getFirstIncompleteIndex(), game.levels.length - 1);
+            loadGameLevel(game.currentIndex);
+        } catch (err) {
+            console.error('Error loading game levels:', err);
+            playLevelSubtitle.textContent = 'No se pudieron cargar los mapas.';
+            playStatus.className = 'status-error';
+            playStatus.textContent = err.message;
+            playResetMapBtn.disabled = true;
+            playPrevMapBtn.disabled = true;
+        }
+    }
+
+    function readStoredProgress() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) {
+                return [];
+            }
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (err) {
+            console.error('Error reading local progress:', err);
+            return [];
+        }
+    }
+
+    function sanitizeCompletedIds(storedIds) {
+        const completed = new Set();
+
+        game.levels.forEach(level => {
+            if (storedIds.includes(level.id) && completed.size === game.levels.indexOf(level)) {
+                completed.add(level.id);
+            }
+        });
+
+        return completed;
+    }
+
+    function persistProgress() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(game.completedIds)));
+        } catch (err) {
+            console.error('Error saving local progress:', err);
+        }
+    }
+
+    function getFirstIncompleteIndex() {
+        for (let index = 0; index < game.levels.length; index += 1) {
+            if (!game.completedIds.has(game.levels[index].id)) {
+                return index;
+            }
+        }
+        return game.levels.length - 1;
+    }
+
+    function getCompletedCount() {
+        return game.completedIds.size;
+    }
+
+    function loadGameLevel(index) {
+        if (!game.loaded || !game.levels[index]) {
+            return;
+        }
+
+        clearAutoAdvanceTimer();
+        game.currentIndex = index;
+        game.state = SokobanGame.createInitialState(game.levels[index].layout);
+        drawPlayableMap(SokobanGame.createBoard(game.state));
+        renderGameView('Listo para jugar', 'status-ready');
+    }
+
+    function renderGameView(statusText, statusClass) {
+        const level = game.levels[game.currentIndex];
+        const completedCount = getCompletedCount();
+        const isFinished = completedCount === game.levels.length;
+
+        playLevelTitle.textContent = `Mapa ${game.currentIndex + 1}: ${level.name}`;
+        playLevelSubtitle.textContent = isFinished
+            ? 'Todos los mapas están completados.'
+            : 'Usa W A S D o flechas para mover al jugador.';
+        playProgressPill.textContent = `${completedCount} / ${game.levels.length} completados`;
+        playStatus.className = statusClass;
+        playStatus.textContent = statusText;
+        playPrevMapBtn.disabled = game.currentIndex === 0;
+        playResetMapBtn.disabled = false;
+        renderMapList();
+    }
+
+    function renderMapList() {
+        mapList.innerHTML = '';
+
+        game.levels.forEach((level, index) => {
+            const item = document.createElement('div');
+            const status = getMapStatus(index, level.id);
+            item.className = `map-list-item map-${status}`;
+
+            const title = document.createElement('span');
+            title.className = 'map-name';
+            title.textContent = `${index + 1}. ${level.name}`;
+
+            const badge = document.createElement('span');
+            badge.className = `map-badge badge-${status}`;
+            badge.textContent = mapStatusLabel(status);
+
+            item.appendChild(title);
+            item.appendChild(badge);
+            mapList.appendChild(item);
+        });
+    }
+
+    function getMapStatus(index, id) {
+        if (index === game.currentIndex) {
+            return 'current';
+        }
+        if (game.completedIds.has(id)) {
+            return 'completed';
+        }
+        return index <= getCompletedCount() ? 'available' : 'locked';
+    }
+
+    function mapStatusLabel(status) {
+        if (status === 'current') {
+            return 'Actual';
+        }
+        if (status === 'completed') {
+            return 'Completado';
+        }
+        if (status === 'available') {
+            return 'Listo';
+        }
+        return 'Bloqueado';
+    }
+
+    function handleGameKeydown(event) {
+        if (activeView !== 'game' || !game.state || !game.loaded) {
+            return;
+        }
+
+        if (event.metaKey || event.ctrlKey || event.altKey) {
+            return;
+        }
+
+        const moves = {
+            ArrowUp: { row: -1, col: 0 },
+            ArrowDown: { row: 1, col: 0 },
+            ArrowLeft: { row: 0, col: -1 },
+            ArrowRight: { row: 0, col: 1 },
+            w: { row: -1, col: 0 },
+            W: { row: -1, col: 0 },
+            s: { row: 1, col: 0 },
+            S: { row: 1, col: 0 },
+            a: { row: 0, col: -1 },
+            A: { row: 0, col: -1 },
+            d: { row: 0, col: 1 },
+            D: { row: 0, col: 1 },
+        };
+
+        const move = moves[event.key];
+        if (!move) {
+            return;
+        }
+
+        event.preventDefault();
+        attemptGameMove(move.row, move.col);
+    }
+
+    function attemptGameMove(rowDelta, colDelta) {
+        if (!game.state) {
+            return;
+        }
+
+        const result = SokobanGame.movePlayer(game.state, rowDelta, colDelta);
+        if (!result.moved) {
+            return;
+        }
+
+        game.state = result.state;
+        drawPlayableMap(SokobanGame.createBoard(game.state));
+
+        if (result.completed) {
+            completeCurrentMap();
+        } else {
+            renderGameView('En curso', 'status-ready');
+        }
+    }
+
+    function completeCurrentMap() {
+        const currentLevel = game.levels[game.currentIndex];
+        game.completedIds.add(currentLevel.id);
+        persistProgress();
+
+        if (game.currentIndex < game.levels.length - 1) {
+            renderGameView('Completado. Cargando el siguiente mapa...', 'status-solved');
+            autoAdvanceTimer = setTimeout(() => {
+                loadGameLevel(game.currentIndex + 1);
+            }, 850);
+            return;
+        }
+
+        renderGameView('Has completado toda la campaña.', 'status-solved');
     }
 });
