@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
         completedIds: new Set(),
         currentIndex: 0,
         state: null,
+        facing: 'right',
         loaded: false,
     };
     const sampleLayouts = [
@@ -102,13 +103,17 @@ document.addEventListener('DOMContentLoaded', function () {
     prevBtn.addEventListener('click', () => {
         if (currentStep > 0) {
             currentStep -= 1;
-            drawMap(mapStates[currentStep]);
+            drawMap(mapStates[currentStep], {
+                playerFacing: getFacingForState(mapStates, currentStep),
+            });
         }
     });
     nextBtn.addEventListener('click', () => {
         if (currentStep < mapStates.length - 1) {
             currentStep += 1;
-            drawMap(mapStates[currentStep]);
+            drawMap(mapStates[currentStep], {
+                playerFacing: getFacingForState(mapStates, currentStep),
+            });
         }
     });
 
@@ -227,10 +232,15 @@ document.addEventListener('DOMContentLoaded', function () {
         return 'cell-empty';
     }
 
-    function setCellValue(cell, value) {
+    function setCellValue(cell, value, playerFacing = 'right') {
         cell.className = `grid-item ${cellClassForValue(value)}`;
         cell.textContent = '';
         cell.dataset.value = value;
+        if (value === '&' || value === '+') {
+            cell.dataset.facing = playerFacing;
+        } else {
+            delete cell.dataset.facing;
+        }
         cell.setAttribute('aria-label', cellLabels[value] || 'Vacío');
         cell.title = cellLabels[value] || 'Vacío';
     }
@@ -269,6 +279,65 @@ document.addEventListener('DOMContentLoaded', function () {
         return filteredRows.map(row => (
             row.filter((_, index) => !columnsToRemove[index])
         ));
+    }
+
+    function normalizeMapState(mapState) {
+        return mapState.map(row => (
+            Array.isArray(row) ? row : Array.from(String(row))
+        ));
+    }
+
+    function findPlayerPosition(mapState) {
+        const normalizedMap = normalizeMapState(mapState);
+        for (let row = 0; row < normalizedMap.length; row += 1) {
+            for (let col = 0; col < normalizedMap[row].length; col += 1) {
+                if (normalizedMap[row][col] === '&' || normalizedMap[row][col] === '+') {
+                    return { row, col };
+                }
+            }
+        }
+        return null;
+    }
+
+    function directionFromDelta(rowDelta, colDelta, fallback = 'right') {
+        if (colDelta < 0) {
+            return 'left';
+        }
+        if (colDelta > 0) {
+            return 'right';
+        }
+        return fallback;
+    }
+
+    function getFacingForState(states, index, fallback = 'right') {
+        if (!states[index]) {
+            return fallback;
+        }
+
+        const currentPlayer = findPlayerPosition(states[index]);
+        if (!currentPlayer) {
+            return fallback;
+        }
+
+        const previousPlayer = index > 0 ? findPlayerPosition(states[index - 1]) : null;
+        if (previousPlayer) {
+            return directionFromDelta(
+                currentPlayer.row - previousPlayer.row,
+                currentPlayer.col - previousPlayer.col,
+                fallback
+            );
+        }
+
+        const nextPlayer = index < states.length - 1 ? findPlayerPosition(states[index + 1]) : null;
+        if (nextPlayer) {
+            return directionFromDelta(
+                nextPlayer.row - currentPlayer.row,
+                nextPlayer.col - currentPlayer.col,
+                fallback
+            );
+        }
+
+        return fallback;
     }
 
     function createGrid(size) {
@@ -333,24 +402,29 @@ document.addEventListener('DOMContentLoaded', function () {
         filteredMapState.forEach((row, y) => {
             row.forEach((value, x) => {
                 const cell = cells[y * filteredMapState[0].length + x];
-                setCellValue(cell, value);
+                setCellValue(cell, value, options.playerFacing);
             });
         });
     }
 
-    function drawMap(mapState) {
+    function drawMap(mapState, options = {}) {
         drawMapInGrid(grid, mapState, {
             editable: true,
             updateMainDimensions: true,
+            playerFacing: options.playerFacing,
         });
     }
 
-    function drawSolutionMap(mapState) {
-        drawMapInGrid(solutionGrid, mapState);
+    function drawSolutionMap(mapState, options = {}) {
+        drawMapInGrid(solutionGrid, mapState, {
+            playerFacing: options.playerFacing,
+        });
     }
 
-    function drawPlayableMap(mapState) {
-        drawMapInGrid(playGrid, mapState);
+    function drawPlayableMap(mapState, options = {}) {
+        drawMapInGrid(playGrid, mapState, {
+            playerFacing: options.playerFacing,
+        });
     }
 
     function startSolutionAnimation(states) {
@@ -364,7 +438,9 @@ document.addEventListener('DOMContentLoaded', function () {
         let animationStep = 0;
         const lastStep = states.length - 1;
         solutionArea.hidden = false;
-        drawSolutionMap(states[animationStep]);
+        drawSolutionMap(states[animationStep], {
+            playerFacing: getFacingForState(states, animationStep),
+        });
         animationStatus.textContent = `Paso ${animationStep} / ${lastStep}`;
 
         if (lastStep === 0) {
@@ -378,7 +454,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 animationStep = 0;
             }
 
-            drawSolutionMap(states[animationStep]);
+            drawSolutionMap(states[animationStep], {
+                playerFacing: getFacingForState(states, animationStep),
+            });
             animationStatus.textContent = `Bucle: paso ${animationStep} / ${lastStep}`;
         }, animationDelayMs);
     }
@@ -461,7 +539,9 @@ document.addEventListener('DOMContentLoaded', function () {
             currentStep = 0;
 
             if (mapStates.length > 0) {
-                drawMap(mapStates[0]);
+                drawMap(mapStates[0], {
+                    playerFacing: getFacingForState(mapStates, 0),
+                });
                 startSolutionAnimation(mapStates);
                 const solutionText = solutionBfs.solution || '(sin solución)';
                 output.textContent = `Pasos de la solución: ${solutionText}`;
@@ -570,7 +650,10 @@ document.addEventListener('DOMContentLoaded', function () {
         clearAutoAdvanceTimer();
         game.currentIndex = index;
         game.state = SokobanGame.createInitialState(game.levels[index].layout);
-        drawPlayableMap(SokobanGame.createBoard(game.state));
+        game.facing = 'right';
+        drawPlayableMap(SokobanGame.createBoard(game.state), {
+            playerFacing: game.facing,
+        });
         renderGameView('Listo para jugar', 'status-ready');
     }
 
@@ -681,13 +764,19 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        game.facing = directionFromDelta(rowDelta, colDelta, game.facing);
         const result = SokobanGame.movePlayer(game.state, rowDelta, colDelta);
         if (!result.moved) {
+            drawPlayableMap(SokobanGame.createBoard(game.state), {
+                playerFacing: game.facing,
+            });
             return;
         }
 
         game.state = result.state;
-        drawPlayableMap(SokobanGame.createBoard(game.state));
+        drawPlayableMap(SokobanGame.createBoard(game.state), {
+            playerFacing: game.facing,
+        });
 
         if (result.completed) {
             completeCurrentMap();

@@ -395,6 +395,7 @@ select:disabled {
 .grid-item {
     width: var(--cell-size);
     height: var(--cell-size);
+    position: relative;
     border: 1px solid rgba(24, 26, 23, 0.24);
     display: flex;
     align-items: center;
@@ -405,7 +406,7 @@ select:disabled {
     background-repeat: no-repeat;
     background-size: 82%;
     font-weight: bold;
-    transition: background-color 120ms ease, transform 120ms ease;
+    transition: background-color 120ms ease, background-size 120ms ease;
 }
 
 .cell-wall {
@@ -429,22 +430,44 @@ select:disabled {
 .cell-box-on-goal {
     background-color: var(--good);
     color: #000000;
-    transform: scale(1.04);
+    background-size: 78%;
     background-image: url("/assets/box-on-goal.svg");
 }
 
 .cell-player {
     background-color: #eef0eb;
     color: #000000;
-    transform: scale(1.04);
-    background-image: url("/assets/player.svg");
+    background-image: none;
 }
 
 .cell-player-on-goal {
     background-color: var(--sun);
     color: #000000;
-    transform: scale(1.04);
+    background-image: none;
+}
+
+.grid-item.cell-player::before,
+.grid-item.cell-player-on-goal::before {
+    content: "";
+    position: absolute;
+    inset: 0;
     background-image: url("/assets/player.svg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 72%;
+    transform: scaleX(1);
+    transform-origin: center;
+    pointer-events: none;
+}
+
+.grid-item[data-facing="left"]::before {
+    transform: scaleX(-1);
+}
+
+.legend-icon.cell-player,
+.legend-icon.cell-player-on-goal {
+    background-image: url("/assets/player.svg");
+    background-size: 72%;
 }
 
 .cell-empty {
