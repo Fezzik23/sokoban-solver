@@ -40,6 +40,32 @@ body {
     margin-bottom: 26px;
 }
 
+.view-tabs {
+    display: inline-flex;
+    gap: 8px;
+    margin-bottom: 22px;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.view-tab {
+    min-height: 38px;
+    padding: 0 16px;
+}
+
+.view-tab.is-active {
+    border-color: var(--accent-strong);
+    background: #d8f2ec;
+    color: var(--ink);
+    box-shadow: 0 0 0 3px rgba(15, 143, 122, 0.18);
+}
+
+.view-pane[hidden] {
+    display: none;
+}
+
 .eyebrow {
     margin: 0 0 8px;
     color: var(--accent-strong);
@@ -212,6 +238,130 @@ select:disabled {
     min-width: 280px;
 }
 
+.play-layout {
+    display: grid;
+    grid-template-columns: minmax(320px, max-content) minmax(280px, 340px);
+    gap: 28px;
+    align-items: start;
+    margin-top: 10px;
+}
+
+.play-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.play-toolbar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.progress-pill {
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.progress-panel {
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: 0 12px 30px rgba(24, 26, 23, 0.08);
+}
+
+.progress-panel h2 {
+    margin-bottom: 8px;
+    font-size: 22px;
+}
+
+.panel-copy {
+    margin-bottom: 16px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.map-list {
+    display: grid;
+    gap: 10px;
+    max-height: 460px;
+    padding-right: 4px;
+    overflow-y: auto;
+}
+
+.map-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    text-align: left;
+}
+
+.map-list-item:hover:not(:disabled) {
+    border-color: var(--accent);
+}
+
+.map-list-item:disabled {
+    cursor: not-allowed;
+}
+
+.map-name {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.map-badge {
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.badge-current {
+    background: #d8f2ec;
+    color: #0a6859;
+}
+
+.badge-completed {
+    background: #d9f2de;
+    color: #23753c;
+}
+
+.badge-available {
+    background: #fff2c2;
+    color: #90640d;
+}
+
+.badge-locked {
+    background: #ebece7;
+    color: #777d76;
+}
+
+.map-locked {
+    opacity: 0.72;
+}
+
+.play-help {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
 .board-heading {
     width: 100%;
     max-width: 520px;
@@ -245,6 +395,7 @@ select:disabled {
 .grid-item {
     width: var(--cell-size);
     height: var(--cell-size);
+    position: relative;
     border: 1px solid rgba(24, 26, 23, 0.24);
     display: flex;
     align-items: center;
@@ -255,7 +406,7 @@ select:disabled {
     background-repeat: no-repeat;
     background-size: 82%;
     font-weight: bold;
-    transition: background-color 120ms ease, transform 120ms ease;
+    transition: background-color 120ms ease, background-size 120ms ease;
 }
 
 .cell-wall {
@@ -279,15 +430,44 @@ select:disabled {
 .cell-box-on-goal {
     background-color: var(--good);
     color: #000000;
-    transform: scale(1.04);
+    background-size: 78%;
     background-image: url("/assets/box-on-goal.svg");
 }
 
 .cell-player {
-    background-color: #5aa7d8;
+    background-color: #eef0eb;
     color: #000000;
-    transform: scale(1.04);
+    background-image: none;
+}
+
+.cell-player-on-goal {
+    background-color: var(--sun);
+    color: #000000;
+    background-image: none;
+}
+
+.grid-item.cell-player::before,
+.grid-item.cell-player-on-goal::before {
+    content: "";
+    position: absolute;
+    inset: 0;
     background-image: url("/assets/player.svg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 72%;
+    transform: scaleX(1);
+    transform-origin: center;
+    pointer-events: none;
+}
+
+.grid-item[data-facing="left"]::before {
+    transform: scaleX(-1);
+}
+
+.legend-icon.cell-player,
+.legend-icon.cell-player-on-goal {
+    background-image: url("/assets/player.svg");
+    background-size: 72%;
 }
 
 .cell-empty {
@@ -301,6 +481,7 @@ select:disabled {
 
 #status-indicator,
 #animation-status,
+#play-status,
 #output {
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -311,7 +492,8 @@ select:disabled {
 }
 
 #status-indicator,
-#animation-status {
+#animation-status,
+#play-status {
     width: 220px;
     padding: 10px 12px;
 }
@@ -421,17 +603,24 @@ select:disabled {
         gap: 26px;
     }
 
+    .play-layout {
+        grid-template-columns: 1fr;
+    }
+
     .controls,
     .button-row,
-    .palette {
+    .palette,
+    .play-toolbar {
         align-items: stretch;
     }
 
     .control-field,
     .button-row,
     .palette-option,
+    .play-toolbar,
     select,
-    button {
+    button,
+    .progress-pill {
         width: 100%;
     }
 

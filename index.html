@@ -11,70 +11,107 @@
         <header class="page-header">
             <p class="eyebrow">Sokoban Solver</p>
             <h1>Resuelve mapas Sokoban</h1>
-            <p class="intro">Dibuja paredes, cajas, objetivos y jugador. Al resolver, la ruta aparece en texto y se reproduce en bucle.</p>
+            <p class="intro">Dibuja paredes, cajas, objetivos y jugador. También puedes jugar una campaña real de mapas, guardar el progreso en el navegador y desbloquear niveles uno a uno.</p>
         </header>
 
-        <section class="controls" aria-label="Controles del mapa">
-            <div class="control-field">
-                <label for="grid-size">Tamaño</label>
-                <select id="grid-size">
-                    <!-- Las opciones se añadirán dinámicamente con JavaScript -->
-                </select>
-            </div>
+        <nav class="view-tabs" aria-label="Modos">
+            <button class="view-tab is-active" type="button" data-view-target="solver">Solver</button>
+            <button class="view-tab" type="button" data-view-target="game">Juego</button>
+        </nav>
 
-            <div class="button-row">
-                <button id="solve-btn" class="primary-button">Resolver</button>
-                <button id="prev-btn">Anterior</button>
-                <button id="next-btn">Siguiente</button>
-            </div>
+        <section id="solver-view" class="view-pane">
+            <section class="controls" aria-label="Controles del mapa">
+                <div class="control-field">
+                    <label for="grid-size">Tamaño</label>
+                    <select id="grid-size">
+                        <!-- Las opciones se añadirán dinámicamente con JavaScript -->
+                    </select>
+                </div>
+
+                <div class="button-row">
+                    <button id="solve-btn" class="primary-button">Resolver</button>
+                    <button id="sample-btn" type="button">Mapa de ejemplo</button>
+                    <button id="prev-btn">Anterior</button>
+                    <button id="next-btn">Siguiente</button>
+                </div>
+            </section>
+
+            <section class="palette" aria-label="Seleccionar pieza">
+                <p class="palette-title">Selecciona una pieza para dibujar</p>
+                <button class="palette-option is-selected" type="button" data-value="#" aria-pressed="true">
+                    <i class="legend-icon cell-wall"></i>Muro
+                </button>
+                <button class="palette-option" type="button" data-value="." aria-pressed="false">
+                    <i class="legend-icon cell-goal"></i>Objetivo
+                </button>
+                <button class="palette-option" type="button" data-value="B" aria-pressed="false">
+                    <i class="legend-icon cell-box"></i>Caja
+                </button>
+                <button class="palette-option" type="button" data-value="&" aria-pressed="false">
+                    <i class="legend-icon cell-player"></i>Jugador
+                </button>
+                <button class="palette-option" type="button" data-value="X" aria-pressed="false">
+                    <i class="legend-icon cell-box-on-goal"></i>Caja colocada
+                </button>
+                <button class="palette-option" type="button" data-value="empty" aria-pressed="false">
+                    <i class="legend-icon cell-empty"></i>Vacío
+                </button>
+            </section>
+
+            <section class="boards" aria-label="Tableros">
+                <div class="game-area">
+                    <div class="board-heading">
+                        <h2>Mapa</h2>
+                        <p>Haz clic en las celdas para dibujar.</p>
+                    </div>
+                    <div class="grid-container" id="grid">
+                        <!-- JavaScript will generate the grid items here -->
+                    </div>
+                    <div id="status-indicator">Dibuja un mapa</div>
+                </div>
+                <div class="game-area solution-area" id="solution-area" hidden>
+                    <div class="board-heading">
+                        <h2>Solución</h2>
+                        <p>Replay automático en bucle.</p>
+                    </div>
+                    <div class="grid-container" id="solution-grid">
+                        <!-- JavaScript will animate the solution here -->
+                    </div>
+                    <div id="animation-status">Esperando solución</div>
+                </div>
+            </section>
+
+            <div id="output">La solución aparecerá aquí.</div>
         </section>
 
-        <section class="palette" aria-label="Seleccionar pieza">
-            <p class="palette-title">Selecciona una pieza para dibujar</p>
-            <button class="palette-option is-selected" type="button" data-value="#" aria-pressed="true">
-                <i class="legend-icon cell-wall"></i>Muro
-            </button>
-            <button class="palette-option" type="button" data-value="." aria-pressed="false">
-                <i class="legend-icon cell-goal"></i>Objetivo
-            </button>
-            <button class="palette-option" type="button" data-value="B" aria-pressed="false">
-                <i class="legend-icon cell-box"></i>Caja
-            </button>
-            <button class="palette-option" type="button" data-value="&" aria-pressed="false">
-                <i class="legend-icon cell-player"></i>Jugador
-            </button>
-            <button class="palette-option" type="button" data-value="X" aria-pressed="false">
-                <i class="legend-icon cell-box-on-goal"></i>Caja colocada
-            </button>
-            <button class="palette-option" type="button" data-value="empty" aria-pressed="false">
-                <i class="legend-icon cell-empty"></i>Vacío
-            </button>
-        </section>
+        <section id="game-view" class="view-pane" hidden>
+            <div class="play-layout">
+                <section class="play-stage">
+                    <div class="board-heading">
+                        <h2 id="play-level-title">Modo juego</h2>
+                        <p id="play-level-subtitle">Cargando mapas...</p>
+                    </div>
 
-        <section class="boards" aria-label="Tableros">
-            <div class="game-area">
-                <div class="board-heading">
-                    <h2>Mapa</h2>
-                    <p>Haz clic en las celdas para dibujar.</p>
-                </div>
-                <div class="grid-container" id="grid">
-                    <!-- JavaScript will generate the grid items here -->
-                </div>
-                <div id="status-indicator">Dibuja un mapa</div>
-            </div>
-            <div class="game-area solution-area" id="solution-area" hidden>
-                <div class="board-heading">
-                    <h2>Solución</h2>
-                    <p>Replay automático en bucle.</p>
-                </div>
-                <div class="grid-container" id="solution-grid">
-                    <!-- JavaScript will animate the solution here -->
-                </div>
-                <div id="animation-status">Esperando solución</div>
+                    <div class="play-toolbar">
+                        <button id="play-prev-map-btn" type="button">Mapa anterior</button>
+                        <button id="play-reset-map-btn" type="button">Reiniciar mapa</button>
+                        <div id="play-progress-pill" class="progress-pill">0 / 0 completados</div>
+                    </div>
+
+                    <div class="grid-container" id="play-grid">
+                        <!-- JavaScript will render the playable map here -->
+                    </div>
+                    <div id="play-status">Cargando mapas...</div>
+                    <p class="play-help">Mueve al jugador con W A S D o con las flechas del teclado.</p>
+                </section>
+
+                <aside class="progress-panel" aria-label="Progreso de mapas">
+                    <h2>Campaña</h2>
+                    <p class="panel-copy">Completa un mapa para desbloquear el siguiente. Puedes abrir cualquier mapa que ya esté desbloqueado desde esta lista.</p>
+                    <div id="map-list" class="map-list"></div>
+                </aside>
             </div>
         </section>
-
-        <div id="output">La solución aparecerá aquí.</div>
 
         <div id="loading-indicator" class="loading-indicator" role="status" aria-live="polite" hidden>
             <div class="loading-box">
@@ -85,6 +122,7 @@
     </main>
 
     <script src="/js/solver.js"></script>
+    <script src="/js/game.js"></script>
     <script src="/js/app.js"></script>
 </body>
 </html>
