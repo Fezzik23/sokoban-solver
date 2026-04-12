@@ -1,6 +1,6 @@
 (function () {
     const adsConfig = {
-        client: '',
+        client: 'ca-pub-6407014526745927',
         slots: {
             solverBanner: '',
             gameSidebar: '',
@@ -49,7 +49,8 @@
     }
 
     function loadAdSense(clientId) {
-        if (document.querySelector('script[data-adsense-loader="true"]')) {
+        if (document.querySelector('script[data-adsense-loader="true"]') ||
+            document.querySelector('script[src*="pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"]')) {
             return;
         }
 
