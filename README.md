@@ -79,7 +79,6 @@ python -m http.server
 
 o con cualquier servidor estático equivalente.
 
-
 ## Ejecutar pruebas
 
 ```bash
